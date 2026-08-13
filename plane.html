@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACU0lEQVR4nO2boW7DMBCGL9HAVBW1bKCkBVHh8Nik4j1FYfEeoXhwTzFcqUPDhVPARgbKVhRVZR267eI5rtPad46Tj8Vxav//nS+xKidQg94gO9bpL8l+lyc2/U52apLoKkxmGA1QxV/3b1zNyTuHYlu6rjJB29hk4SqnjPhnABXfZOEq1AhqQko7xSoeoKyH6kxPdY4Jna5fA9CVWMUjqA/1pvSibfQG2bG0BGKPPkJ1amtAm0il1/50sRYZF/V2GSA5uFT0KUFkgKQRQRggSWeA1MAhrH+AgDJAypBgDJCi9QZcSQw6Xazh7qHc9vYiMROhDFDFY5tEHWA3YP5aLVJnjG9aXwNYDTBFv04fl3QZID0BaToDOAezeddzfw90GcA9oCnCeI/zg0gkA3QmSH0Ks+0F1KhKCVbpaoD0BKQJ1gCuQpjU+WeoP3v2PiEXFKu5Vb9Dsa1nACU0M2xFUy4ygCJlxjmiKc4MQLiMuFQ44twAimszXImmeDUAmS7W8JV/nvXsKBvD+9O94xn9cSi2PF+Co2wMAGAtJsq9QJ1I0r6+zfBqAE7+nDT2mfoUbzWgSvz344fxueFyYvU7LvBaA4wTnt3q21eber/jAPa9gBph23u+kNkMaSKtbWMg2N0gFyIGDJcTsYirBJMBEusfIBQDBLMhxdMT6tES30gvA9QbRgYIUjKAOwsAAGC1YV//VGcKYH/I0DVShQ/Z7/IkpRcAQlnACOpDvaXIx3xqDEB/dK5UA+hSiC0Tqs4NdidHTQ832YiLzg5TYjhSZ3rL/QBMHeftZ/QP8wAAAABJRU5ErkJggg==">
+<link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAMAEBAAAAEAIADtAAAANgAAACAgAAABACAAewEAACMBAABAQAAAAQAgAIwCAACeAgAAiVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAtElEQVR4nGNkgAIhOaf/DCSCd4/2MTKSqxkGmAhp1srbi98Acm0mygBCtjMwMDCw4JO0CYCx9jJcm+RMmgvS9iFsRxhEggHEApwGHNmAnY0OGGHRyOM2iySbv+xKQzUAGWjl7WV4dOMuipichjLWgMSIBVjUfdmVxvB2Hx8DAwMDg7DTJwYGjb0MWnmYsYHVBTDwtuIOA4ObEcQAHABvLAh3qOCTJmwAAwMDA8Ouc3ilKc6NABHLMU2DSXW0AAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABQklEQVR4nNWXIY/CMBiG3y4TF0IQzCHOgFhOolGQoO9XTJ6+n4BG8itOkxzq9CRBoHFDkIXM7QR0K1BY7/vaXniTiXZNn2ffmi2fgCatblzq5m3kuN8IdRzqwC/tnis+AJSqSOAZXu0vecInXE2R7wAoFfAJV3lBqxuXHPjbxzdLImhe5jYsAc7TWxGQ4Yg89ysYvZ+ufxFIVnXZORIkARX+aM6ZgM08p8DPl9mcM4FrIBXOEpBgFU75IAndz6g9XXC87iZfJmYCtkV0YCMBjswjKEnAVOQ17mM9nxjvFzYvqSMP2T2AtUNoAs9WnYv70fhgJEkWuE72uQWmwxuBv4b8HYhmg3qwTKnbMP8FZ/CFjFcBCwnPLRLpHESzATKkAGgVKPJdXQHZqfiK5FWdqs/2TMKP+42oKiC7VdeVUOEA8As2BXODysFeJAAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAABAAAAAQAgGAAAAqmlx3gAAAlNJREFUeJztm6FuwzAQhi/RwFQVtWygpAVR4fDYpOI9RWHxHqF4cE8xXKlDw4VTwEYGylYUVWUduu3iOa7T2neOk4/FcWr//50vsSonUIPeIDvW6S/JfpcnNv1OdmqS6CpMZhgNUMVf929czck7h2Jbuq4yQdvYZOEqp4z4ZwAV32ThKtQIakJKO8UqHqCsh+pMT3WOCZ2uXwPQlVjFI6gP9ab0om30BtmxtARijz5CdWprQJtIpdf+dLEWGRf1dhkgObhU9ClBZICkEUEYIElngNTAIax/gIAyQMqQYAyQovUGXEkMOl2s4e6h3Pb2IjEToQxQxWObRB1gN2D+Wi1SZ4xvWl8DWA0wRb9OH5d0GSA9AWk6AzgHs3nXc38PdBnAPaApwniP84NIJAN0Jkh9CrPtBdSoSglW6WqA9ASkCdYArkKY1PlnqD979j4hFxSruVW/Q7GtZwAlNDNsRVMuMoAiZcY5oinODEC4jLhUOOLcAIprM1yJpng1AJku1vCVf5717Cgbw/vTveMZ/XEotjxfgqNsDABgLSbKvUCdSNK+vs3wagBO/pw09pn6FG81oEr89+OH8bnhcmL1Oy7wWgOME57d6ttXm3q/4wD2vYAaYdt7vpDZDGkirW1jINjdIBciBgyXE7GIqwSTARLrHyAUAwSzIcXTE+rREt9ILwPUG0YGCFIygDsLAABgtWFf/1RnCmB/yNA1UoUP2e/yJKUXAEJZwAjqQ72lyMd8agxAf3SuVAPoUogtE6rODXYnR00PN9mIi84OU2I4Umd6y/0ATB3n7Wf0D/MAAAAASUVORK5CYII=">
+<title>飞机大战 · BOSS战</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:monospace;overflow:hidden}
+#menu{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px}
+#menu h1{color:#4cf;font-size:30px;text-shadow:0 0 14px #4cf;letter-spacing:2px}
+#menu p{color:#9cf;font-size:13px}
+.btn{padding:13px 34px;font-size:17px;font-weight:bold;border:2px solid #4cf;border-radius:10px;background:rgba(0,100,200,.3);color:#fff;cursor:pointer;transition:.2s}
+.btn:hover{background:rgba(0,160,255,.55);box-shadow:0 0 12px #4cf}
+#game{display:none;position:relative}
+canvas{display:block;background:#050510;touch-action:none}
+#hud{position:absolute;top:4px;left:6px;color:#fff;font-size:12px;line-height:1.45;text-shadow:1px 1px 0 #000;pointer-events:none;z-index:5}
+#tip{position:absolute;bottom:4px;left:0;width:100%;text-align:center;color:#9cf;font-size:11px;pointer-events:none;z-index:5}
+#bossWarn{position:absolute;top:34%;left:0;width:100%;text-align:center;color:#f44;font-size:30px;font-weight:bold;text-shadow:0 0 16px #f00;pointer-events:none;opacity:0;transition:opacity .35s;z-index:6;letter-spacing:3px}
+#restartBtn{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);padding:14px 40px;font-size:18px;font-weight:bold;border:2px solid #4cf;border-radius:12px;background:rgba(0,120,220,.55);color:#fff;cursor:pointer;z-index:9;display:none;box-shadow:0 0 16px rgba(0,200,255,.6);font-family:monospace}
+#restartBtn:hover{background:rgba(0,170,255,.75);box-shadow:0 0 22px #4cf}
+#pauseBtn{position:absolute;right:8px;top:6px;z-index:9;padding:6px 12px;font-size:13px;font-weight:bold;border:2px solid #fc4;border-radius:8px;background:rgba(120,80,0,.5);color:#fff;cursor:pointer;font-family:monospace}
+#pauseBtn:hover{background:rgba(200,140,0,.7);box-shadow:0 0 10px #fc4}
+#pauseOverlay{position:absolute;left:0;top:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:8;pointer-events:none}
+#pauseOverlay .pt{color:#fc4;font-size:30px;font-weight:bold;text-shadow:0 0 14px #fa0;letter-spacing:4px}
+#pauseOverlay .ps{color:#9cf;font-size:13px;margin-top:10px}
+#bestLine{color:#fc4;font-size:12px;margin-top:6px}
+#bestLine b{color:#ff5}
+</style>
+</head>
+<body>
+<div id="menu">
+  <h1>✈️ 飞机大战</h1>
+  <p>选择难度 · BOSS 分两阶段</p>
+  <button class="btn" onclick="startGame('easy')">简单（300分出BOSS · 弹匣60 · BOSS 30HP · 节奏慢疏）· 最高 <b id="bE">0</b></button>
+  <button class="btn" onclick="startGame('normal')">普通（200分出BOSS · 弹匣30 · BOSS 45HP · 节奏慢疏）· 最高 <b id="bN">0</b></button>
+  <button class="btn" onclick="startGame('hard')">困难（100分出BOSS · 弹匣15 · BOSS 70HP · 节奏慢疏）· 最高 <b id="bH">0</b></button>
+</div>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="hud"></div>
+  <div id="bossWarn">⚠ BOSS 来袭 ⚠</div>
+  <button id="restartBtn" onclick="backToMenu()">🔄 重新开始</button>
+  <button id="pauseBtn" onclick="togglePause()">⏸ 暂停</button>
+  <div id="pauseOverlay"><div class="pt">⏸ 已暂停</div><div class="ps">按 P 或点「继续」恢复</div><button class="btn" style="margin-top:14px;pointer-events:auto" onclick="togglePause()">▶ 继续</button></div>
+  <div id="tip">← → 移动 · 空格射击 · R 换弹 · P 暂停 · 手机拖动跟手+自动射</div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=Math.min(innerWidth,480);H=cv.height=innerHeight;}
+resize();addEventListener('resize',resize);
+const menu=document.getElementById('menu'),gameDiv=document.getElementById('game'),hudEl=document.getElementById('hud'),warnEl=document.getElementById('bossWarn'),restartBtn=document.getElementById('restartBtn');
+function backToMenu(){menu.style.display='flex';gameDiv.style.display='none';restartBtn.style.display='none';paused=false;pauseBtn.textContent='⏸ 暂停';pauseOverlay.style.display='none';refreshMenuBest();}
+function refreshMenuBest(){const ek=localStorage.getItem('planeBest_easy')||'0',nk=localStorage.getItem('planeBest_normal')||'0',hk=localStorage.getItem('planeBest_hard')||'0';const e=document.getElementById('bE'),n=document.getElementById('bN'),h=document.getElementById('bH');if(e)e.textContent=ek;if(n)n.textContent=nk;if(h)h.textContent=hk;}
+addEventListener('DOMContentLoaded',refreshMenuBest);
+
+
+let diff='normal',maxAmmo=30,bossEvery=200,bossHp=45,bossFireInt=50,bossBulletVy=4,bossBulletSpread=0.8;
+let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive,bossCooldown;
+
+function startGame(d){
+  diff=d;
+  // 三难度"运行速度/节奏"统一为简单模式（慢疏舒适），仅弹匣/Boss血量/出Boss间隔保留难度差异
+  if(d==='easy'){maxAmmo=60;bossEvery=300;bossHp=30;bossFireInt=56;bossBulletVy=3.2;bossBulletSpread=0.6;}
+  if(d==='normal'){maxAmmo=30;bossEvery=200;bossHp=45;bossFireInt=56;bossBulletVy=3.2;bossBulletSpread=0.6;}
+  if(d==='hard'){maxAmmo=15;bossEvery=100;bossHp=70;bossFireInt=56;bossBulletVy=3.2;bossBulletSpread=0.6;}
+  menu.style.display='none';gameDiv.style.display='block';restartBtn.style.display='none';paused=false;pauseBtn.textContent='⏸ 暂停';pauseOverlay.style.display='none';reset();requestAnimationFrame(loop);
+}
+function reset(){
+  player={x:W/2-20,y:H-72,w:40,h:48,speed:5,ammo:maxAmmo,maxAmmo:maxAmmo,cool:0,hp:3,invuln:0,flashTimer:0,scatterTimer:0,rapidTimer:0};
+  bullets=[];enemies=[];boss=null;particles=[];props=[];score=0;over=false;
+  enemyTimer=0;bossTimer=0;reloadTimer=0;touchActive=false;bossCooldown=0;
+  stars=[];for(let i=0;i<70;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2+.5,sp:Math.random()*1+0.4});
+}
+
+// ===== 精美绘制 =====
+function drawPlayer(p){
+  ctx.save();
+  ctx.globalAlpha=(p.invuln>0&&Math.floor(p.invuln/4)%2===0)?0.35:1;
+  // 尾焰（动态）
+  const flick=5+Math.random()*5;
+  ctx.fillStyle='#f80';ctx.beginPath();ctx.moveTo(p.x+p.w/2-7,p.y+p.h);ctx.lineTo(p.x+p.w/2,p.y+p.h+flick);ctx.lineTo(p.x+p.w/2+7,p.y+p.h);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ff0';ctx.beginPath();ctx.moveTo(p.x+p.w/2-3,p.y+p.h);ctx.lineTo(p.x+p.w/2,p.y+p.h+flick*0.65);ctx.lineTo(p.x+p.w/2+3,p.y+p.h);ctx.closePath();ctx.fill();
+  // 主机身 渐变
+  const g=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);g.addColorStop(0,'#6cf');g.addColorStop(.5,'#36a');g.addColorStop(1,'#124');
+  ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(p.x+p.w/2,p.y);ctx.lineTo(p.x+2,p.y+p.h-4);ctx.lineTo(p.x+8,p.y+p.h);ctx.lineTo(p.x+p.w-8,p.y+p.h);ctx.lineTo(p.x+p.w-2,p.y+p.h-4);ctx.closePath();ctx.fill();
+  // 机翼
+  ctx.fillStyle='#0af';ctx.beginPath();ctx.moveTo(p.x+5,p.y+p.h*0.5);ctx.lineTo(p.x-10,p.y+p.h*0.82);ctx.lineTo(p.x+9,p.y+p.h*0.68);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(p.x+p.w-5,p.y+p.h*0.5);ctx.lineTo(p.x+p.w+10,p.y+p.h*0.82);ctx.lineTo(p.x+p.w-9,p.y+p.h*0.68);ctx.closePath();ctx.fill();
+  // 机翼引擎细节
+  ctx.fillStyle='#048';ctx.fillRect(p.x-7,p.y+p.h*0.72,4,6);ctx.fillRect(p.x+p.w+3,p.y+p.h*0.72,4,6);
+  // 座舱
+  ctx.fillStyle='#0ff';ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h*0.30,7,10,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.beginPath();ctx.ellipse(p.x+p.w/2-2.5,p.y+p.h*0.28,3,4.5,0,0,Math.PI*2);ctx.fill();
+  // 机身中线
+  ctx.fillStyle='rgba(0,200,255,.35)';ctx.fillRect(p.x+p.w/2-1,p.y+4,2,p.h*0.5);
+  // buff 光环
+  if(p.scatterTimer>0){ctx.strokeStyle='#4c4';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x+p.w/2,p.y+p.h/2,31,0,Math.PI*2);ctx.stroke();}
+  if(p.rapidTimer>0){ctx.strokeStyle='#4cf';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x+p.w/2,p.y+p.h/2,31,0,Math.PI*2);ctx.stroke();}
+  ctx.restore();
+}
+function drawEnemy(e){
+  // 红敌机 战机造型
+  ctx.fillStyle='#a00';ctx.beginPath();ctx.moveTo(e.x+e.w/2,e.y+e.h);ctx.lineTo(e.x,e.y+10);ctx.lineTo(e.x+e.w/2,e.y+2);ctx.lineTo(e.x+e.w,e.y+10);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#d22';ctx.fillRect(e.x+5,e.y+9,e.w-10,e.h-16);
+  ctx.fillStyle='#f44';ctx.fillRect(e.x+8,e.y+13,e.w-16,e.h-24);
+  // 机翼
+  ctx.fillStyle='#b00';ctx.fillRect(e.x-4,e.y+e.h*0.55,7,8);ctx.fillRect(e.x+e.w-3,e.y+e.h*0.55,7,8);
+  // 座舱
+  ctx.fillStyle='#ff0';ctx.beginPath();ctx.ellipse(e.x+e.w/2,e.y+e.h*0.42,5,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.5)';ctx.fillRect(e.x+e.w/2-1,e.y+e.h*0.39,2,3);
+  // 尾喷
+  ctx.fillStyle='#fa0';ctx.fillRect(e.x+e.w/2-3,e.y+e.h-5,6,4);
+}
+function drawBoss(b){
+  // 大型战机 Boss
+  const c1=b.phase===3?'#fd0':b.phase===2?'#f80':'#c00';
+  const grad=ctx.createLinearGradient(b.x,b.y,b.x,b.y+b.h);grad.addColorStop(0,'#320');grad.addColorStop(1,c1);
+  // 主翼
+  ctx.fillStyle='#410';ctx.beginPath();ctx.moveTo(b.x-14,b.y+b.h*0.45);ctx.lineTo(b.x+b.w/2,b.y+b.h*0.65);ctx.lineTo(b.x-6,b.y+b.h*0.62);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(b.x+b.w+14,b.y+b.h*0.45);ctx.lineTo(b.x+b.w/2,b.y+b.h*0.65);ctx.lineTo(b.x+b.w+6,b.y+b.h*0.62);ctx.closePath();ctx.fill();
+  // 机身
+  ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b.x+4,b.y+b.h*0.65);ctx.lineTo(b.x+12,b.y+b.h);ctx.lineTo(b.x+b.w-12,b.y+b.h);ctx.lineTo(b.x+b.w-4,b.y+b.h*0.65);ctx.closePath();ctx.fill();
+  // 腹部装甲
+  ctx.fillStyle='#200';ctx.fillRect(b.x+16,b.y+b.h*0.55,b.w-32,b.h*0.32);
+  // 座舱
+  ctx.fillStyle='#f00';ctx.beginPath();ctx.ellipse(b.x+b.w/2,b.y+b.h*0.40,12,9,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(b.x+b.w/2-4,b.y+b.h*0.37,8,3);
+  // 炮口（多个）
+  ctx.fillStyle='#000';ctx.fillRect(b.x+b.w/2-4,b.y+b.h-8,8,10);
+  ctx.fillStyle='#222';ctx.fillRect(b.x+14,b.y+b.h-4,8,6);ctx.fillRect(b.x+b.w-22,b.y+b.h-4,8,6);
+  // 引擎火
+  const ef=3+Math.random()*4;
+  ctx.fillStyle='#f80';ctx.fillRect(b.x+b.w/2-8,b.y+b.h,16,5+ef);
+  // 阶段2 光环提示（躲避模式）
+  if(b.phase===2){
+    ctx.strokeStyle='rgba(255,200,0,.6)';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w*0.6,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+function shoot(){
+  if(player.ammo<=0||reloadTimer>0)return;
+  const rapid=player.rapidTimer>0,scatter=player.scatterTimer>0;
+  if(scatter){bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:-1.5});bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:0});bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:1.5});}
+  else bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:0});
+  if(rapid)bullets.push({x:player.x+player.w/2-2,y:player.y-4,w:4,h:10,vy:-9,vx:0});
+  player.ammo--;player.cool=rapid?4:8;
+  if(player.ammo<=0&&reloadTimer<=0)reloadTimer=45;
+}
+function spawnEnemy(){enemies.push({x:Math.random()*(W-34),y:-34,w:34,h:34,vy:1.4+Math.random()*1.4,hp:1});}
+function spawnBoss(){
+  boss={x:W/2-44,y:-90,w:88,h:68,vy:0.9,vx:1.1,hp:bossHp,maxHp:bossHp,phase:1,timer:0,fireTimer:0,enterY:68,color:'#c00',dodgeTimer:0};
+  warnEl.style.opacity=1;setTimeout(()=>warnEl.style.opacity=0,1800);
+}
+function spawnProp(x,y){const r=Math.random();const t=r<0.35?'scatter':r<0.6?'ammo':r<0.85?'rapid':'heal';const colors={scatter:'#4c4',ammo:'#f80',rapid:'#4cf',heal:'#f44'};props.push({x,y,w:22,h:22,type:t,color:colors[t],vy:1.2,life:420});}
+function explode(x,y,color,count){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*3;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:30,color});}}
+
+const keys={};
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space')e.preventDefault();if(e.code==='KeyP')togglePause();});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+let paused=false;
+const pauseBtn=document.getElementById('pauseBtn'),pauseOverlay=document.getElementById('pauseOverlay');
+function togglePause(){if(over)return;paused=!paused;pauseBtn.textContent=paused?'▶ 继续':'⏸ 暂停';pauseOverlay.style.display=paused?'flex':'none';}
+function bestKey(){return'planeBest_'+diff;}
+function getBest(){return parseInt(localStorage.getItem(bestKey())||'0',10)||0;}
+function setBest(v){localStorage.setItem(bestKey(),String(v));}
+function tp(e){const r=cv.getBoundingClientRect();return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};}
+cv.addEventListener('touchstart',e=>{e.preventDefault();touchActive=true;const p=tp(e);player.x=p.x-player.w/2;player.y=Math.min(H-player.h-20,p.y);player.cool=0;},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!touchActive)return;const p=tp(e);player.x=Math.max(0,Math.min(W-player.w,p.x-player.w/2));player.y=Math.max(0,Math.min(H-player.h-20,p.y));},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();touchActive=false;},{passive:false});
+
+function bHit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function hurtPlayer(){if(player.invuln>0||over)return;player.hp--;player.invuln=90;player.flashTimer=18;explode(player.x+player.w/2,player.y+player.h/2,'#4cf',18);if(player.hp<=0)over=true;}
+
+function loop(){
+  requestAnimationFrame(loop);
+  if(paused)return;
+  ctx.clearRect(0,0,W,H);
+  // 星空
+  ctx.fillStyle='#fff';for(const s of stars){s.y+=s.sp;if(s.y>H)s.y=0;ctx.globalAlpha=0.5;ctx.fillRect(s.x,s.y,s.s,s.s);}
+  ctx.globalAlpha=1;
+  if(!over){
+    if(keys['ArrowLeft']||keys['KeyA'])player.x-=player.speed;
+    if(keys['ArrowRight']||keys['KeyD'])player.x+=player.speed;
+    player.x=Math.max(0,Math.min(W-player.w,player.x));
+    if(player.cool>0)player.cool--;
+    if(reloadTimer>0){reloadTimer--;if(reloadTimer<=0)player.ammo=player.maxAmmo;}
+    if((keys['Space']||touchActive)&&player.cool<=0&&reloadTimer<=0)shoot();
+    if(keys['KeyR']&&reloadTimer<=0&&player.ammo<player.maxAmmo)reloadTimer=45;
+    if(player.invuln>0)player.invuln--;
+    if(player.flashTimer>0)player.flashTimer--;
+    if(player.scatterTimer>0)player.scatterTimer--;
+    if(player.rapidTimer>0)player.rapidTimer--;
+    // 子弹运动
+    for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.x+=b.vx;b.y+=b.vy;if(b.y+b.vy<0||b.x<0||b.x>W)bullets.splice(i,1);}
+    // 敌机
+    if(!boss){
+      enemyTimer++;if(enemyTimer>48){spawnEnemy();enemyTimer=0;}
+      for(const e of enemies)e.y+=e.vy;
+      for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.y>H){enemies.splice(i,1);hurtPlayer();}}
+      for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];let hit=false;
+        for(let j=bullets.length-1;j>=0;j--){const b=bullets[j];if(b.vy>=0)continue;
+          if(b.x<b.x+e.w&&b.x+b.w>e.x&&b.y<e.y+e.h&&b.y+b.h>e.y){enemies.splice(i,1);bullets.splice(j,1);score+=10;explode(e.x+e.w/2,e.y+e.h/2,'#f55',12);if(Math.random()<0.18)spawnProp(e.x+e.w/2-11,e.y+e.h/2);hit=true;break;}
+        }
+        if(!hit&&bHit(e,player)&&player.invuln<=0){hurtPlayer();enemies.splice(i,1);}
+      }
+      if(score>0&&score%bossEvery===0&&bossTimer===0&&bossCooldown<=0){bossTimer=1;spawnBoss();enemies=[];}
+      // 每消灭一波（敌机出完一整批）递减冷却；这里用 enemyTimer 周期近似"一波"
+      if(bossCooldown>0&&!boss) bossCooldown--;
+    }
+    // BOSS
+    if(boss){
+      if(bossTimer===1){boss.y+=boss.vy;if(boss.y>=boss.enterY)bossTimer=2;}
+      else if(bossTimer===2){
+        // ===== 两阶段逻辑 =====
+        const half=boss.maxHp*0.5;
+        if(boss.phase===1&&boss.hp<=half){boss.phase=2;boss.color='#fd0';explode(boss.x+boss.w/2,boss.y+boss.h/2,'#ff0',26);}
+        // 阶段2：主动躲避玩家子弹
+        if(boss.phase===2){
+          // 找离 boss 最近的玩家子弹
+          let nearest=null,nd=1e9;
+          for(const b of bullets){if(b.vy>=0)continue;const dx=(b.x+b.w/2)-(boss.x+boss.w/2),dy=(b.y+b.h/2)-(boss.y+boss.h/2);const d=dx*dx+dy*dy;if(d<nd){nd=d;nearest=b;}}
+          if(nearest&&nd<(boss.w*0.9)*(boss.w*0.9)){ // 子弹较近才躲
+            const px=nearest.x+nearest.w/2;
+            const goRight=px<boss.x+boss.w/2; // 子弹在左侧→往右躲
+            boss.x+=goRight?1.8:-1.8;
+            boss.dodgeTimer=8;
+          }else{
+            boss.x+=boss.vx;
+          }
+        }else{
+          boss.x+=boss.vx;
+        }
+        // 钳制 Boss 在屏幕内（核心修复：避免反转不及时导致飞出）
+        if(boss.x<=0){boss.x=0;boss.vx=Math.abs(boss.vx);}
+        if(boss.x+boss.w>=W){boss.x=W-boss.w;boss.vx=-Math.abs(boss.vx);}
+        // 射击
+        boss.fireTimer++;
+        const fireInt=boss.phase===2?Math.max(24,bossFireInt-10):bossFireInt;
+        if(boss.fireTimer>fireInt){boss.fireTimer=0;const shots=boss.phase===2?5:3;for(let i=0;i<shots;i++)bullets.push({x:boss.x+boss.w/2-2,y:boss.y+boss.h,w:4,h:8,vy:bossBulletVy,vx:(i-(shots-1)/2)*bossBulletSpread});}
+        // 玩家子弹打 boss
+        for(let j=bullets.length-1;j>=0;j--){const b=bullets[j];if(b.vy>=0)continue;
+          if(b.x<b.x+b.w&&b.x+b.w>boss.x&&b.y<boss.y+boss.h&&b.y+b.h>boss.y){boss.hp--;bullets.splice(j,1);explode(b.x,b.y,'#ff0',4);
+            if(boss.hp<=0){explode(boss.x+boss.w/2,boss.y+boss.h/2,'#fa0',34);score+=200;spawnProp(boss.x+boss.w/2-11,boss.y+boss.h/2);boss=null;bossTimer=0;bossCooldown=5;break;}
+          }
+        }
+        if(boss&&bHit(boss,player)&&player.invuln<=0)hurtPlayer();
+      }
+    }
+    // BOSS 弹幕打玩家
+    for(const b of bullets){if(b.vy<=0)continue;if(b.x<player.x+player.w&&b.x+b.w>player.x&&b.y<player.y+player.h&&b.y+b.h>player.y&&player.invuln<=0)hurtPlayer();}
+    // 道具
+    for(let i=props.length-1;i>=0;i--){const p=props[i];p.y+=p.vy;p.life--;if(p.life<=0){props.splice(i,1);continue;}if(bHit(p,player)){if(p.type==='scatter')player.scatterTimer=480;if(p.type==='ammo'){player.maxAmmo+=10;player.ammo=player.maxAmmo;}if(p.type==='rapid')player.rapidTimer=480;if(p.type==='heal')player.hp=Math.min(3,player.hp+1);explode(p.x+p.w/2,p.y+p.h/2,p.color,10);props.splice(i,1);}}
+    // 粒子
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--;if(p.life<=0)particles.splice(i,1);}
+  }
+  // 绘制
+  if(!over)drawPlayer(player);
+  // 被撞红闪
+  if(player.flashTimer>0){ctx.fillStyle='rgba(255,0,0,'+(0.28*player.flashTimer/18)+')';ctx.fillRect(0,0,W,H);}
+  // 子弹
+  for(const b of bullets){if(b.vy<0){ctx.fillStyle='#ff5';ctx.fillRect(b.x,b.y,4,10);ctx.fillStyle='#fff';ctx.fillRect(b.x+1,b.y+1,2,6);}else{ctx.fillStyle='#0ff';ctx.fillRect(b.x,b.y,4,8);}}
+  for(const e of enemies)drawEnemy(e);
+  if(boss)drawBoss(boss);
+  // 道具
+  for(const p of props){ctx.fillStyle=p.color;ctx.beginPath();ctx.roundRect?ctx.roundRect(p.x,p.y,p.w,p.h,4):ctx.rect(p.x,p.y,p.w,p.h);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText(p.type==='scatter'?'S':p.type==='ammo'?'M':p.type==='rapid'?'R':'H',p.x+p.w/2,p.y+p.h/2+5);}
+  // 粒子
+  for(const p of particles){ctx.globalAlpha=p.life/30;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3);}
+  ctx.globalAlpha=1;
+  // ===== BOSS 血条（醒目，顶部居中）=====
+  if(boss&&bossTimer===2){
+    const bw=Math.min(380,W-20),bx=(W-bw)/2,by=10;
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(bx-5,by-5,bw+10,46);
+    ctx.fillStyle='#333';ctx.fillRect(bx,by,bw,16);
+    const ratio=Math.max(0,boss.hp/boss.maxHp);
+    const grd=ctx.createLinearGradient(bx,0,bx+bw,0);grd.addColorStop(0,'#f00');grd.addColorStop(.5,'#f80');grd.addColorStop(1,boss.phase===2?'#ff0':'#f44');
+    ctx.fillStyle=grd;ctx.fillRect(bx,by,bw*ratio,16);
+    ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,16);
+    // 阶段分割线（50% 处）
+    ctx.strokeStyle='rgba(255,255,255,.5)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(bx+bw*0.5,by);ctx.lineTo(bx+bw*0.5,by+16);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#fff';ctx.font='bold 12px monospace';ctx.textAlign='center';
+    const phaseTxt=boss.phase===2?'阶段 2/2（躲避模式）':'阶段 1/2';
+    ctx.fillText('BOSS  '+boss.hp+' / '+boss.maxHp+'   '+phaseTxt, W/2, by+30);
+  }
+  // HUD
+  let hud='HP ';for(let i=0;i<3;i++)hud+=i<player.hp?'❤️':'🖤';hud+='<br>弹匣 '+player.ammo+'/'+player.maxAmmo;if(reloadTimer>0)hud+='<br>换弹中 '+Math.ceil(reloadTimer/30)+'s';if(player.scatterTimer>0)hud+='<br>🟩散射 '+Math.ceil(player.scatterTimer/60)+'s';if(player.rapidTimer>0)hud+='<br>🟦速射 '+Math.ceil(player.rapidTimer/60)+'s';hud+='<br>分数 '+score;hud+='<br>最高分 '+getBest();hud+='<br>难度：'+(diff==='easy'?'简单':diff==='normal'?'普通':'困难');hudEl.innerHTML=hud;
+  if(over){restartBtn.style.display='block';const best=getBest();let isNew=false;if(score>best){setBest(score);isNew=true;}
+    ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='24px monospace';ctx.fillText('游戏结束',W/2,H/2-34);ctx.font='16px monospace';ctx.fillText('分数: '+score,W/2,H/2-6);ctx.fillStyle='#fc4';ctx.font='14px monospace';ctx.fillText('最高分: '+Math.max(best,score)+(isNew?'  🎉 新纪录！':''),W/2,H/2+18);ctx.font='13px monospace';ctx.fillStyle='#9cf';ctx.fillText('按 R 或点「重新开始」按钮重开',W/2,H/2+44);if(keys['KeyR']){keys['KeyR']=false;backToMenu();}}
+}
+</script>
+</body>
+</html>
