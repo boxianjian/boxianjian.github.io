@@ -39,12 +39,16 @@ resize();addEventListener('resize',resize);
 const hudEl=document.getElementById('hud'),warnEl=document.getElementById('bossWarn'),restartBtn=document.getElementById('restartBtn');
 
 let maxAmmo=30,bossEvery=200,bossHp=45,bossFireInt=56;
-let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive,dragOffsetX,dragOffsetY;
+let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive,dragOffsetX,dragOffsetY,bossCount;
 
 function reset(){
+  restartBtn.style.display='none';
+  pauseOverlay.style.display='none';
+  paused=false; pauseBtn.textContent='⏸ 暂停';
+
   player={x:W/2-20,y:H-80,w:40,h:48,speed:5,ammo:maxAmmo,maxAmmo:maxAmmo,cool:0,hp:3,invuln:0,flashTimer:0,scatterTimer:0,rapidTimer:0};
   bullets=[];enemies=[];boss=null;particles=[];props=[];score=0;over=false;
-  enemyTimer=0;bossTimer=0;reloadTimer=0;touchActive=false;dragOffsetX=0;dragOffsetY=0;
+  bossCount=0; enemyTimer=0; bossTimer=0; reloadTimer=0; touchActive=false; dragOffsetX=0; dragOffsetY=0;
   stars=[];for(let i=0;i<70;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2+.5,sp:Math.random()*1+0.4});
   clearInterval(timer);timer=setInterval(loop,1000/60);
   updateHud();draw();
@@ -147,7 +151,7 @@ function loop(){
   if(keys['ArrowUp']||keys['KeyW'])player.y-=player.speed;
   if(keys['ArrowDown']||keys['KeyS'])player.y+=player.speed;
   player.x=Math.max(0,Math.min(W-player.w,player.x));
-  player.y=Math.max(0,Math.min(H-player.h,player.y));
+  player.y=Math.max(60,Math.min(H-player.h,player.y)); // 顶部夹紧，不进出生区
 
   if(player.cool>0)player.cool--;
   if(reloadTimer>0){reloadTimer--;if(reloadTimer<=0)player.ammo=player.maxAmmo;}
@@ -170,7 +174,7 @@ function loop(){
     for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.y>H){enemies.splice(i,1);hurtPlayer();}}
   }
 
-  // ===== 碰撞检测：子弹宽度缩到 2px，判定更精准 =====
+  // 子弹碰撞
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i];
     if(b.vy>=0)continue;
@@ -178,9 +182,8 @@ function loop(){
     if(!boss){
       for(let j=enemies.length-1;j>=0;j--){
         const e=enemies[j];
-        // 子弹判定线用中心 2px（bx = b.x+0 到 b.x+2），视觉上就是子弹芯
-        const bx = b.x;
-        if(bx < e.x+e.w && bx+2 > e.x && b.y < e.y+e.h && b.y+b.h > e.y){
+        const bx=b.x;
+        if(bx<b.x+e.w && bx+2>e.x && b.y<e.y+e.h && b.y+b.h>e.y){
           enemies.splice(j,1);bullets.splice(i,1);score+=10;
           explode(e.x+e.w/2,e.y+e.h/2,'#ff5555',14);
           if(Math.random()<0.18)spawnProp(e.x+e.w/2-11,e.y+e.h/2);
@@ -189,13 +192,15 @@ function loop(){
       }
     }
     if(boss&&bossTimer===2){
-      const bx = b.x;
-      if(bx < boss.x+boss.w && bx+2 > boss.x && b.y < boss.y+boss.h && b.y+b.h > boss.y){
+      const bx=b.x;
+      if(bx<b.x+boss.w && bx+2>boss.x && b.y<boss.y+boss.h && b.y+b.h>boss.y){
         boss.hp--;bullets.splice(i,1);explode(b.x,b.y,'#ff0',4);
         if(boss.hp<=0){
+          bullets=bullets.filter(b=>b.vy<0); // boss死清下射子弹
           explode(boss.x+boss.w/2,boss.y+boss.h/2,'#fa0',34);score+=200;
           spawnProp(boss.x+boss.w/2-11,boss.y+boss.h/2);
-          boss=null;bossTimer=0;break;
+          boss=null;bossTimer=0;bossCount++; // 计数+1，不连环刷
+          break;
         }
       }
     }
@@ -204,9 +209,14 @@ function loop(){
   if(!boss){
     for(let i=enemies.length-1;i>=0;i--){
       const e=enemies[i];
+      if(e.y<0) continue; // 进场前不撞人
       if(bHit(e,player)&&player.invuln<=0){hurtPlayer();enemies.splice(i,1);}
     }
-    if(score>0&&score%bossEvery===0&&bossTimer===0&&!boss){bossTimer=1;spawnBoss();enemies=[];}
+    // boss 触发用 bossCount 锁
+    if(bossTimer===0 && score>=bossEvery*(bossCount+1)){
+      bossCount++;
+      bossTimer=1;spawnBoss();enemies=[];
+    }
   }
 
   if(boss){
@@ -291,12 +301,12 @@ cv.addEventListener('touchmove',e=>{
   e.preventDefault();if(!touchActive)return;
   const p=canvasPos(e.touches[0]);
   player.x=p.x-dragOffsetX-player.w/2;player.y=p.y-dragOffsetY-player.h/2;
-  player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(0,Math.min(H-player.h,player.y));
+  player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(60,Math.min(H-player.h,player.y));
 },{passive:false});
 cv.addEventListener('touchend',e=>{e.preventDefault();touchActive=false;},{passive:false});
 
 cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();dragOffsetX=(e.clientX-r.left)-(player.x+player.w/2);dragOffsetY=(e.clientY-r.top)-(player.y+player.h/2);cv._drag=true;});
-cv.addEventListener('mousemove',e=>{if(!cv._drag)return;const r=cv.getBoundingClientRect();player.x=(e.clientX-r.left)-dragOffsetX-player.w/2;player.y=(e.clientY-r.top)-dragOffsetY-player.h/2;player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(0,Math.min(H-player.h,player.y));});
+cv.addEventListener('mousemove',e=>{if(!cv._drag)return;const r=cv.getBoundingClientRect();player.x=(e.clientX-r.left)-dragOffsetX-player.w/2;player.y=(e.clientY-r.top)-dragOffsetY-player.h/2;player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(60,Math.min(H-player.h,player.y));});
 addEventListener('mouseup',()=>cv._drag=false);
 
 let timer;
