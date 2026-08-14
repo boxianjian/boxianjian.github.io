@@ -13,11 +13,19 @@ canvas { display: block; background: #000; touch-action: none; }
 #tip { position: absolute; bottom: 4px; left: 0; width: 100%; text-align: center; color: #9cf; font-size: 11px; pointer-events: none; z-index: 5; }
 #bossWarn { position: absolute; top: 30%; left: 0; width: 100%; text-align: center; color: #f44; font-size: 28px; font-weight: bold; text-shadow: 0 0 20px #f00; pointer-events: none; opacity: 0; transition: opacity .35s; z-index: 6; letter-spacing: 3px; }
 #restartBtn { position: absolute; left: 50%; top: 60%; transform: translate(-50%,-50%); padding: 14px 40px; font-size: 18px; font-weight: bold; border: 2px solid #4cf; border-radius: 12px; background: rgba(0,120,220,.55); color: #fff; cursor: pointer; z-index: 9; display: none; font-family: monospace; }
-#pauseBtn { position: absolute; right: 8px; top: 6px; z-index: 9; padding: 6px 12px; font-size: 13px; font-weight: bold; border: 2px solid #fc4; border-radius: 8px; background: rgba(120,80,0,.5); color: #fff; cursor: pointer; font-family: monospace; }
+#pauseBtn { position: absolute: right: 8px; top: 6px; z-index: 9; padding: 6px 12px; font-size: 13px; font-weight: bold; border: 2px solid #fc4; border-radius: 8px; background: rgba(120,80,0,.5); color: #fff; cursor: pointer; font-family: monospace; }
 #pauseOverlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,.6); z-index: 8; pointer-events: none; }
 #pauseOverlay .pt { color: #fc4; font-size: 30px; font-weight: bold; text-shadow: 0 0 14px #fa0; letter-spacing: 4px; }
 #pauseOverlay .ps { color: #9cf; font-size: 13px; margin-top: 10px; }
 #homeBtn { position: absolute; left: 8px; top: 6px; z-index: 9; padding: 5px 10px; font-size: 12px; border: 1px solid #4cf; border-radius: 6px; background: rgba(0,80,180,.5); color: #fff; cursor: pointer; font-family: monospace; text-decoration: none; }
+/* 难度选择菜单 */
+#diffMenu { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,.85); z-index: 20; }
+#diffMenu h2 { color: #0f0; font-size: 22px; margin-bottom: 24px; text-shadow: 0 0 10px #0f0; }
+.diffBtn { display: block; width: 200px; padding: 12px 0; margin: 8px 0; font-size: 16px; font-weight: bold; border: 2px solid #0f0; border-radius: 10px; background: rgba(0,255,0,.08); color: #0f0; cursor: pointer; font-family: monospace; text-align: center; transition: .2s; }
+.diffBtn:hover, .diffBtn:active { background: rgba(0,255,0,.25); transform: scale(1.05); }
+.diffBtn.easy { border-color: #4f4; color: #4f4; }
+.diffBtn.normal { border-color: #ff0; color: #ff0; }
+.diffBtn.hard { border-color: #f44; color: #f44; }
 </style>
 </head>
 <body>
@@ -30,6 +38,14 @@ canvas { display: block; background: #000; touch-action: none; }
   <button id="pauseBtn" onclick="togglePause()">⏸ 暂停</button>
   <div id="pauseOverlay"><div class="pt">⏸ 已暂停</div><div class="ps">按 P 或点「继续」恢复</div><button style="margin-top:14px;pointer-events:auto;padding:8px 20px;font-size:14px;border:1px solid #fc4;border-radius:6px;background:rgba(180,120,0,.6);color:#fff;cursor:pointer;font-family:monospace" onclick="togglePause()">▶ 继续</button></div>
   <div id="tip">↑↓←→ / WASD 移动 · 空格射击 · 手机拖动跟手 · P 暂停</div>
+
+  <!-- 难度选择 -->
+  <div id="diffMenu">
+    <h2>🎯 选择难度</h2>
+    <button class="diffBtn easy" onclick="startGame('easy')">😊 简单</button>
+    <button class="diffBtn normal" onclick="startGame('normal')">😐 普通</button>
+    <button class="diffBtn hard" onclick="startGame('hard')">😈 困难</button>
+  </div>
 </div>
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -37,9 +53,23 @@ let W,H;
 function resize(){W=cv.width=Math.min(innerWidth,480);H=cv.height=innerHeight;}
 resize();addEventListener('resize',resize);
 const hudEl=document.getElementById('hud'),warnEl=document.getElementById('bossWarn'),restartBtn=document.getElementById('restartBtn');
+const diffMenu=document.getElementById('diffMenu');
 
-let maxAmmo=30,bossEvery=200,bossHp=45,bossFireInt=56;
+// 难度参数
+const diffConfig={
+  easy:   {bossHp:30, bossEvery:250, bossFireInt:80, enemySpawn:55, maxAmmo:40, bossDodge:false},
+  normal: {bossHp:45, bossEvery:200, bossFireInt:56, enemySpawn:42, maxAmmo:30, bossDodge:false},
+  hard:   {bossHp:65, bossEvery:150, bossFireInt:40, enemySpawn:30, maxAmmo:20, bossDodge:true}
+};
+let maxAmmo,bossEvery,bossHp,bossFireInt,bossDodge;
 let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive,dragOffsetX,dragOffsetY,bossCount;
+
+function startGame(diff){
+  const c=diffConfig[diff];
+  maxAmmo=c.maxAmmo; bossEvery=c.bossEvery; bossHp=c.bossHp; bossFireInt=c.bossFireInt; bossDodge=c.bossDodge;
+  diffMenu.style.display='none';
+  reset();
+}
 
 function reset(){
   restartBtn.style.display='none';
@@ -75,7 +105,6 @@ function shoot(){
 function spawnEnemy(){
   enemies.push({x:Math.random()*(W-36),y:-36,w:36,h:36,vy:1.2+Math.random()*1.8,hp:1,type:Math.floor(Math.random()*3)});
 }
-
 function spawnBoss(){
   boss={x:W/2-44,y:-90,w:88,h:68,vy:0.9,vx:1.1,hp:bossHp,maxHp:bossHp,phase:1,fireTimer:0,enterY:68};
   warnEl.style.opacity=1;setTimeout(()=>warnEl.style.opacity=0,1800);
@@ -151,7 +180,7 @@ function loop(){
   if(keys['ArrowUp']||keys['KeyW'])player.y-=player.speed;
   if(keys['ArrowDown']||keys['KeyS'])player.y+=player.speed;
   player.x=Math.max(0,Math.min(W-player.w,player.x));
-  player.y=Math.max(60,Math.min(H-player.h,player.y)); // 顶部夹紧，不进出生区
+  player.y=Math.max(60,Math.min(H-player.h,player.y));
 
   if(player.cool>0)player.cool--;
   if(reloadTimer>0){reloadTimer--;if(reloadTimer<=0)player.ammo=player.maxAmmo;}
@@ -169,7 +198,7 @@ function loop(){
   }
 
   if(!boss){
-    enemyTimer++;if(enemyTimer>42){spawnEnemy();enemyTimer=0;}
+    enemyTimer++;if(enemyTimer>enemySpawn){spawnEnemy();enemyTimer=0;}
     for(const e of enemies)e.y+=e.vy;
     for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.y>H){enemies.splice(i,1);hurtPlayer();}}
   }
@@ -196,26 +225,35 @@ function loop(){
       if(bx<b.x+boss.w && bx+2>boss.x && b.y<boss.y+boss.h && b.y+b.h>boss.y){
         boss.hp--;bullets.splice(i,1);explode(b.x,b.y,'#ff0',4);
         if(boss.hp<=0){
-          bullets=bullets.filter(b=>b.vy<0); // boss死清下射子弹
+          bullets=bullets.filter(b=>b.vy<0);
           explode(boss.x+boss.w/2,boss.y+boss.h/2,'#fa0',34);score+=200;
           spawnProp(boss.x+boss.w/2-11,boss.y+boss.h/2);
-          boss=null;bossTimer=0;bossCount++; // 计数+1，不连环刷
+          boss=null;bossTimer=0;bossCount++;
           break;
         }
       }
     }
   }
 
+  // ★ boss 子弹打玩家（之前漏掉的！）
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    if(b.vy<=0) continue; // 只查往下飞的
+    if(bHit(b,player) && player.invuln<=0){
+      hurtPlayer();
+      bullets.splice(i,1);
+      explode(b.x+b.w/2,b.y+b.h/2,'#0ff',6);
+    }
+  }
+
   if(!boss){
     for(let i=enemies.length-1;i>=0;i--){
       const e=enemies[i];
-      if(e.y<0) continue; // 进场前不撞人
+      if(e.y<0) continue;
       if(bHit(e,player)&&player.invuln<=0){hurtPlayer();enemies.splice(i,1);}
     }
-    // boss 触发用 bossCount 锁
     if(bossTimer===0 && score>=bossEvery*(bossCount+1)){
-      bossCount++;
-      bossTimer=1;spawnBoss();enemies=[];
+      bossCount++;bossTimer=1;spawnBoss();enemies=[];
     }
   }
 
@@ -224,8 +262,25 @@ function loop(){
     else if(bossTimer===2){
       if(boss.phase===1&&boss.hp<=boss.maxHp*0.5){boss.phase=2;explode(boss.x+boss.w/2,boss.y+boss.h/2,'#ff0',26);}
       boss.x+=boss.vx;
-      if(boss.x<=0){boss.x=0;boss.vx=Math.abs(boss.vx);}
+      if(boss.x<=0){boss.x=0;boss.vx=Math.abs(boss.vx);;}
       if(boss.x+boss.w>=W){boss.x=W-boss.w;boss.vx=-Math.abs(boss.vx);}
+
+      // ★ 二阶段 boss 躲子弹（困难模式全阶段躲）
+      if(bossDodge || boss.phase===2){
+        for(const b of bullets){
+          if(b.vy>=0) continue;
+          // 子弹在 boss 上方且 x 方向会命中
+          if(b.y < boss.y + boss.h + 60 && b.y > boss.y - 200){
+            const bx=b.x;
+            if(bx+b.w > boss.x && bx < boss.x + boss.w){
+              // 往反方向闪避
+              boss.vx = (bx < boss.x + boss.w/2) ? Math.abs(boss.vx)*1.5 : -Math.abs(boss.vx)*1.5;
+              break;
+            }
+          }
+        }
+      }
+
       boss.fireTimer++;
       const fireInt=boss.phase===2?Math.max(24,bossFireInt-10):bossFireInt;
       if(boss.fireTimer>fireInt){
@@ -310,7 +365,8 @@ cv.addEventListener('mousemove',e=>{if(!cv._drag)return;const r=cv.getBoundingCl
 addEventListener('mouseup',()=>cv._drag=false);
 
 let timer;
-reset();
+// 不自动 reset()，等用户选难度
+ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
 </script>
 </body>
 </html>
