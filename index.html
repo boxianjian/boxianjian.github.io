@@ -30,8 +30,8 @@ body {
 @keyframes load { to { width: 100%; } }
 #home { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 #home.show { display: flex; }
-h1 { font-size: 28px; text-shadow: 0 0 12px #0f0; margin-bottom: 8px; }
-p.tip { color: #0a0; margin-bottom: 32px; font-size: 14px; }
+h1 { font-size: 28px; text-shadow: 0 0 12px #0f0; margin-bottom: 8px; text-align: center; }
+p.tip { color: #0a0; margin-bottom: 32px; font-size: 14px; text-align: center; }
 .grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 320px; }
 .card {
   display: block; padding: 22px 16px; border: 2px solid #0f0; border-radius: 12px;
@@ -40,12 +40,12 @@ p.tip { color: #0a0; margin-bottom: 32px; font-size: 14px; }
 }
 .card:hover { background: rgba(0,255,0,.18); box-shadow: 0 0 22px #0f0; transform: scale(1.03); }
 .card span { font-size: 32px; display: block; margin-bottom: 6px; }
-.footer { margin-top: 32px; font-size: 11px; color: #060; }
+.footer { margin-top: 32px; font-size: 11px; color: #060; text-align: center; }
 </style>
 </head>
 <body>
 <div id="splash">
-  <div class="logo">✈️🐍🏃 BOXIANJIAN</div>
+  <div class="logo">✈️🐍🏃🧱 BOXIANJIAN</div>
   <div class="sub">小游戏合集 · 加载中…</div>
   <div class="bar"><i></i></div>
 </div>
@@ -56,6 +56,7 @@ p.tip { color: #0a0; margin-bottom: 32px; font-size: 14px; }
     <a class="card" href="plane.html"><span>✈️</span>飞机大战</a>
     <a class="card" href="snake.html"><span>🐍</span>贪吃蛇</a>
     <a class="card" href="runner.html"><span>🏃</span>像素跑酷</a>
+    <a class="card" href="tetris.html"><span>🧱</span>俄罗斯方块</a>
   </div>
   <div class="footer">Made with ❤️ by Boxianjian · GitHub Pages</div>
 </div>
