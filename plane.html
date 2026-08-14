@@ -6,13 +6,13 @@
 <title>飞机大战</title>
 <style>
 * { box-sizing: border-box; }
-body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: monospace; overflow: hidden; }
+body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: monospace; overflow: hidden; margin: 0; }
 #game { display: block; position: relative; }
-canvas { display: block; background: #050510; touch-action: none; }
-#hud { position: absolute; top: 4px; left: 6px; color: #fff; font-size: 12px; line-height: 1.45; text-shadow: 1px 1px 0 #000; pointer-events: none; z-index: 5; }
+canvas { display: block; background: #000; touch-action: none; }
+#hud { position: absolute; top: 4px; left: 6px; color: #fff; font-size: 13px; line-height: 1.5; text-shadow: 1px 1px 0 #000; pointer-events: none; z-index: 5; }
 #tip { position: absolute; bottom: 4px; left: 0; width: 100%; text-align: center; color: #9cf; font-size: 11px; pointer-events: none; z-index: 5; }
-#bossWarn { position: absolute; top: 34%; left: 0; width: 100%; text-align: center; color: #f44; font-size: 30px; font-weight: bold; text-shadow: 0 0 16px #f00; pointer-events: none; opacity: 0; transition: opacity .35s; z-index: 6; letter-spacing: 3px; }
-#restartBtn { position: absolute; left: 50%; top: 58%; transform: translate(-50%,-50%); padding: 14px 40px; font-size: 18px; font-weight: bold; border: 2px solid #4cf; border-radius: 12px; background: rgba(0,120,220,.55); color: #fff; cursor: pointer; z-index: 9; display: none; font-family: monospace; }
+#bossWarn { position: absolute; top: 30%; left: 0; width: 100%; text-align: center; color: #f44; font-size: 28px; font-weight: bold; text-shadow: 0 0 20px #f00; pointer-events: none; opacity: 0; transition: opacity .35s; z-index: 6; letter-spacing: 3px; }
+#restartBtn { position: absolute; left: 50%; top: 60%; transform: translate(-50%,-50%); padding: 14px 40px; font-size: 18px; font-weight: bold; border: 2px solid #4cf; border-radius: 12px; background: rgba(0,120,220,.55); color: #fff; cursor: pointer; z-index: 9; display: none; font-family: monospace; }
 #pauseBtn { position: absolute; right: 8px; top: 6px; z-index: 9; padding: 6px 12px; font-size: 13px; font-weight: bold; border: 2px solid #fc4; border-radius: 8px; background: rgba(120,80,0,.5); color: #fff; cursor: pointer; font-family: monospace; }
 #pauseOverlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,.6); z-index: 8; pointer-events: none; }
 #pauseOverlay .pt { color: #fc4; font-size: 30px; font-weight: bold; text-shadow: 0 0 14px #fa0; letter-spacing: 4px; }
@@ -29,7 +29,7 @@ canvas { display: block; background: #050510; touch-action: none; }
   <button id="restartBtn" onclick="reset()">🔄 重新开始</button>
   <button id="pauseBtn" onclick="togglePause()">⏸ 暂停</button>
   <div id="pauseOverlay"><div class="pt">⏸ 已暂停</div><div class="ps">按 P 或点「继续」恢复</div><button style="margin-top:14px;pointer-events:auto;padding:8px 20px;font-size:14px;border:1px solid #fc4;border-radius:6px;background:rgba(180,120,0,.6);color:#fff;cursor:pointer;font-family:monospace" onclick="togglePause()">▶ 继续</button></div>
-  <div id="tip">← → 移动 · 空格射击 · R 换弹 · P 暂停 · 手机拖动跟手+自动射</div>
+  <div id="tip">↑↓←→ / WASD 移动 · 空格射击 · 手机拖动跟手 · P 暂停</div>
 </div>
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -38,51 +38,50 @@ function resize(){W=cv.width=Math.min(innerWidth,480);H=cv.height=innerHeight;}
 resize();addEventListener('resize',resize);
 const hudEl=document.getElementById('hud'),warnEl=document.getElementById('bossWarn'),restartBtn=document.getElementById('restartBtn');
 
-let diff='normal',maxAmmo=30,bossEvery=200,bossHp=45,bossFireInt=56;
-let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive;
+let maxAmmo=30,bossEvery=200,bossHp=45,bossFireInt=56;
+let player,bullets,enemies,boss,particles,props,stars,score,over,enemyTimer,bossTimer,reloadTimer,touchActive,dragOffsetX,dragOffsetY;
 
 function reset(){
-  player={x:W/2-20,y:H-72,w:40,h:48,speed:5,ammo:maxAmmo,maxAmmo:maxAmmo,cool:0,hp:3,invuln:0,flashTimer:0,scatterTimer:0,rapidTimer:0};
+  player={x:W/2-20,y:H-80,w:40,h:48,speed:5,ammo:maxAmmo,maxAmmo:maxAmmo,cool:0,hp:3,invuln:0,flashTimer:0,scatterTimer:0,rapidTimer:0};
   bullets=[];enemies=[];boss=null;particles=[];props=[];score=0;over=false;
-  enemyTimer=0;bossTimer=0;reloadTimer=0;touchActive=false;
+  enemyTimer=0;bossTimer=0;reloadTimer=0;touchActive=false;dragOffsetX=0;dragOffsetY=0;
   stars=[];for(let i=0;i<70;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2+.5,sp:Math.random()*1+0.4});
   clearInterval(timer);timer=setInterval(loop,1000/60);
   updateHud();draw();
 }
 
-function getBest(){return +localStorage.getItem('planeBest_'+diff)||0;}
-function setBest(v){localStorage.setItem('planeBest_'+diff,v);}
+function getBest(){return +localStorage.getItem('planeBest')||0;}
+function setBest(v){localStorage.setItem('planeBest',v);}
 
 function shoot(){
   if(player.ammo<=0||reloadTimer>0)return;
   const rapid=player.rapidTimer>0,scatter=player.scatterTimer>0;
   if(scatter){
-    bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:-1.5});
-    bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:0});
-    bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:1.5});
+    bullets.push({x:player.x+player.w/2-3,y:player.y,w:2,h:10,vy:-8,vx:-1.5});
+    bullets.push({x:player.x+player.w/2-1,y:player.y,w:2,h:10,vy:-8,vx:0});
+    bullets.push({x:player.x+player.w/2+1,y:player.y,w:2,h:10,vy:-8,vx:1.5});
   }else{
-    bullets.push({x:player.x+player.w/2-2,y:player.y,w:4,h:10,vy:-8,vx:0});
+    bullets.push({x:player.x+player.w/2-1,y:player.y,w:2,h:10,vy:-8,vx:0});
   }
-  if(rapid)bullets.push({x:player.x+player.w/2-2,y:player.y-4,w:4,h:10,vy:-9,vx:0});
+  if(rapid)bullets.push({x:player.x+player.w/2-1,y:player.y-4,w:2,h:10,vy:-9,vx:0});
   player.ammo--;player.cool=rapid?4:8;
   if(player.ammo<=0&&reloadTimer<=0)reloadTimer=45;
 }
 
-function spawnEnemy(){enemies.push({x:Math.random()*(W-34),y:-34,w:34,h:34,vy:1.4+Math.random()*1.4,hp:1});}
-
-function spawnBoss(){
-  boss={x:W/2-44,y:-90,w:88,h:68,vy:0.9,vx:1.1,hp:bossHp,maxHp:bossHp,phase:1,timer:0,fireTimer:0,enterY:68};
-  warnEl.style.opacity=1;setTimeout(()=>warnEl.style.opacity=0,1800);
+function spawnEnemy(){
+  enemies.push({x:Math.random()*(W-36),y:-36,w:36,h:36,vy:1.2+Math.random()*1.8,hp:1,type:Math.floor(Math.random()*3)});
 }
 
+function spawnBoss(){
+  boss={x:W/2-44,y:-90,w:88,h:68,vy:0.9,vx:1.1,hp:bossHp,maxHp:bossHp,phase:1,fireTimer:0,enterY:68};
+  warnEl.style.opacity=1;setTimeout(()=>warnEl.style.opacity=0,1800);
+}
 function spawnProp(x,y){
   const r=Math.random(),t=r<0.35?'scatter':r<0.6?'ammo':r<0.85?'rapid':'heal';
   const c={scatter:'#4c4',ammo:'#f80',rapid:'#4cf',heal:'#f44'};
   props.push({x,y,w:22,h:22,type:t,color:c[t],vy:1.2,life:420});
 }
-
 function explode(x,y,color,count){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*3;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:30,color});}}
-
 function bHit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 
 function hurtPlayer(){
@@ -91,7 +90,6 @@ function hurtPlayer(){
   explode(player.x+player.w/2,player.y+player.h/2,'#4cf',18);
   if(player.hp<=0){over=true;gameOver();}
 }
-
 function gameOver(){
   const best=getBest(),isNew=score>best;
   if(isNew)setBest(score);
@@ -119,22 +117,22 @@ function drawPlayer(p){
   ctx.restore();
 }
 function drawEnemy(e){
-  ctx.fillStyle='#a00';ctx.beginPath();ctx.moveTo(e.x+e.w/2,e.y+e.h);ctx.lineTo(e.x,e.y+10);ctx.lineTo(e.x+e.w/2,e.y+2);ctx.lineTo(e.x+e.w,e.y+10);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#d22';ctx.fillRect(e.x+5,e.y+9,e.w-10,e.h-16);
-  ctx.fillStyle='#f44';ctx.fillRect(e.x+8,e.y+13,e.w-16,e.h-24);
-  ctx.fillStyle='#b00';ctx.fillRect(e.x-4,e.y+e.h*0.55,7,8);ctx.fillRect(e.x+e.w-3,e.y+e.h*0.55,7,8);
-  ctx.fillStyle='#ff0';ctx.beginPath();ctx.ellipse(e.x+e.w/2,e.y+e.h*0.42,5,6,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fa0';ctx.fillRect(e.x+e.w/2-3,e.y+e.h-5,6,4);
+  const colors=[['#ff3030','#ff6666','#cc0000'],['#30ff30','#66ff66','#00cc00'],['#cc30ff','#ee88ff','#8800cc']];
+  const c=colors[e.type]||colors[0];
+  ctx.shadowColor=c[0];ctx.shadowBlur=10;
+  ctx.fillStyle=c[0];ctx.fillRect(e.x+4,e.y+8,e.w-8,e.h-16);
+  ctx.fillStyle=c[1];ctx.fillRect(e.x,e.y+e.h*0.4,8,10);ctx.fillRect(e.x+e.w-8,e.y+e.h*0.4,8,10);
+  ctx.fillStyle=c[2];ctx.beginPath();ctx.moveTo(e.x+e.w/2,e.y);ctx.lineTo(e.x+8,e.y+10);ctx.lineTo(e.x+e.w-8,e.y+10);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ff0';ctx.fillRect(e.x+e.w/2-3,e.y+e.h-4,6,5);
+  ctx.shadowBlur=0;
 }
 function drawBoss(b){
-  const c1=b.phase===3?'#fd0':b.phase===2?'#f80':'#c00';
+  const c1=b.phase===2?'#f80':'#c00';
+  ctx.shadowColor='#f00';ctx.shadowBlur=15;
   const grad=ctx.createLinearGradient(b.x,b.y,b.x,b.y+b.h);grad.addColorStop(0,'#320');grad.addColorStop(1,c1);
-  ctx.fillStyle='#410';ctx.beginPath();ctx.moveTo(b.x-14,b.y+b.h*0.45);ctx.lineTo(b.x+b.w/2,b.y+b.h*0.65);ctx.lineTo(b.x-6,b.y+b.h*0.62);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(b.x+b.w+14,b.y+b.h*0.45);ctx.lineTo(b.x+b.w/2,b.y+b.h*0.65);ctx.lineTo(b.x+b.w+6,b.y+b.h*0.62);ctx.closePath();ctx.fill();
   ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b.x+4,b.y+b.h*0.65);ctx.lineTo(b.x+12,b.y+b.h);ctx.lineTo(b.x+b.w-12,b.y+b.h);ctx.lineTo(b.x+b.w-4,b.y+b.h*0.65);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#200';ctx.fillRect(b.x+16,b.y+b.h*0.55,b.w-32,b.h*0.32);
-  ctx.fillStyle='#f00';ctx.beginPath();ctx.ellipse(b.x+b.w/2,b.y+b.h*0.40,12,9,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(b.x+b.w/2-4,b.y+b.h*0.37,8,3);
+  ctx.fillStyle='#f00';ctx.beginPath();ctx.ellipse(b.x+b.w/2,b.y+b.h*0.40,14,10,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
   if(b.phase===2){ctx.strokeStyle='rgba(255,200,0,.6)';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w*0.6,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
 }
 
@@ -144,8 +142,13 @@ function loop(){
   ctx.fillStyle='#fff';for(const s of stars){s.y+=s.sp;if(s.y>H)s.y=0;ctx.globalAlpha=0.5;ctx.fillRect(s.x,s.y,s.s,s.s);}
   ctx.globalAlpha=1;
 
-  if(keys['ArrowLeft']||keys['KeyA'])player.x=Math.max(0,player.x-player.speed);
-  if(keys['ArrowRight']||keys['KeyD'])player.x=Math.min(W-player.w,player.x+player.speed);
+  if(keys['ArrowLeft']||keys['KeyA'])player.x-=player.speed;
+  if(keys['ArrowRight']||keys['KeyD'])player.x+=player.speed;
+  if(keys['ArrowUp']||keys['KeyW'])player.y-=player.speed;
+  if(keys['ArrowDown']||keys['KeyS'])player.y+=player.speed;
+  player.x=Math.max(0,Math.min(W-player.w,player.x));
+  player.y=Math.max(0,Math.min(H-player.h,player.y));
+
   if(player.cool>0)player.cool--;
   if(reloadTimer>0){reloadTimer--;if(reloadTimer<=0)player.ammo=player.maxAmmo;}
   if((keys['Space']||touchActive)&&player.cool<=0&&reloadTimer<=0)shoot();
@@ -155,38 +158,44 @@ function loop(){
   if(player.scatterTimer>0)player.scatterTimer--;
   if(player.rapidTimer>0)player.rapidTimer--;
 
-  for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.x+=b.vx;b.y+=b.vy;if(b.y+b.vy<0||b.x<0||b.x>W)bullets.splice(i,1);}
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.x+=b.vx;b.y+=b.vy;
+    if(b.y+b.vy<0 || b.x+b.w<0 || b.x>W) bullets.splice(i,1);
+  }
 
   if(!boss){
-    enemyTimer++;if(enemyTimer>48){spawnEnemy();enemyTimer=0;}
+    enemyTimer++;if(enemyTimer>42){spawnEnemy();enemyTimer=0;}
     for(const e of enemies)e.y+=e.vy;
     for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.y>H){enemies.splice(i,1);hurtPlayer();}}
   }
 
-  // 子弹 vs 敌人（只检测往上飞的子弹）
+  // ===== 碰撞检测：子弹宽度缩到 2px，判定更精准 =====
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i];
     if(b.vy>=0)continue;
+    if(b.x+b.w<0 || b.x>W) continue;
     if(!boss){
       for(let j=enemies.length-1;j>=0;j--){
         const e=enemies[j];
-        if(b.x<b.x+e.w&&b.x+b.w>e.x&&b.y<b.y+e.h&&b.y+b.h>e.y){
+        // 子弹判定线用中心 2px（bx = b.x+0 到 b.x+2），视觉上就是子弹芯
+        const bx = b.x;
+        if(bx < e.x+e.w && bx+2 > e.x && b.y < e.y+e.h && b.y+b.h > e.y){
           enemies.splice(j,1);bullets.splice(i,1);score+=10;
-          explode(e.x+e.w/2,e.y+e.h/2,'#f55',12);
+          explode(e.x+e.w/2,e.y+e.h/2,'#ff5555',14);
           if(Math.random()<0.18)spawnProp(e.x+e.w/2-11,e.y+e.h/2);
           break;
         }
       }
     }
-    // 子弹 vs boss
     if(boss&&bossTimer===2){
-      if(b.x<b.x+boss.w&&b.x+b.w>boss.x&&b.y<boss.y+boss.h&&b.y+b.h>boss.y){
+      const bx = b.x;
+      if(bx < boss.x+boss.w && bx+2 > boss.x && b.y < boss.y+boss.h && b.y+b.h > boss.y){
         boss.hp--;bullets.splice(i,1);explode(b.x,b.y,'#ff0',4);
         if(boss.hp<=0){
           explode(boss.x+boss.w/2,boss.y+boss.h/2,'#fa0',34);score+=200;
           spawnProp(boss.x+boss.w/2-11,boss.y+boss.h/2);
-          boss=null;bossTimer=0;
-          break;
+          boss=null;bossTimer=0;break;
         }
       }
     }
@@ -197,16 +206,13 @@ function loop(){
       const e=enemies[i];
       if(bHit(e,player)&&player.invuln<=0){hurtPlayer();enemies.splice(i,1);}
     }
-    if(score>0&&score%bossEvery===0&&bossTimer===0&&!boss){
-      bossTimer=1;spawnBoss();enemies=[];
-    }
+    if(score>0&&score%bossEvery===0&&bossTimer===0&&!boss){bossTimer=1;spawnBoss();enemies=[];}
   }
 
   if(boss){
     if(bossTimer===1){boss.y+=boss.vy;if(boss.y>=boss.enterY)bossTimer=2;}
     else if(bossTimer===2){
-      const half=boss.maxHp*0.5;
-      if(boss.phase===1&&boss.hp<=half){boss.phase=2;explode(boss.x+boss.w/2,boss.y+boss.h/2,'#ff0',26);}
+      if(boss.phase===1&&boss.hp<=boss.maxHp*0.5){boss.phase=2;explode(boss.x+boss.w/2,boss.y+boss.h/2,'#ff0',26);}
       boss.x+=boss.vx;
       if(boss.x<=0){boss.x=0;boss.vx=Math.abs(boss.vx);}
       if(boss.x+boss.w>=W){boss.x=W-boss.w;boss.vx=-Math.abs(boss.vx);}
@@ -233,12 +239,11 @@ function loop(){
       props.splice(i,1);
     }
   }
-
   for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--;if(p.life<=0)particles.splice(i,1);}
 
   if(!over)drawPlayer(player);
   if(player.flashTimer>0){ctx.fillStyle='rgba(255,0,0,'+(0.28*player.flashTimer/18)+')';ctx.fillRect(0,0,W,H);}
-  for(const b of bullets){if(b.vy<0){ctx.fillStyle='#ff5';ctx.fillRect(b.x,b.y,4,10);}else{ctx.fillStyle='#0ff';ctx.fillRect(b.x,b.y,4,8);}}
+  for(const b of bullets){if(b.vy<0){ctx.fillStyle='#ff5';ctx.fillRect(b.x,b.y,2,10);}else{ctx.fillStyle='#0ff';ctx.fillRect(b.x,b.y,4,8);}}
   for(const e of enemies)drawEnemy(e);
   if(boss)drawBoss(boss);
   for(const p of props){ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText(p.type==='scatter'?'S':p.type==='ammo'?'M':p.type==='rapid'?'R':'H',p.x+p.w/2,p.y+p.h/2+5);}
@@ -255,7 +260,6 @@ function loop(){
     ctx.fillStyle='#fff';ctx.font='bold 12px monospace';ctx.textAlign='center';
     ctx.fillText('BOSS  '+boss.hp+'/'+boss.maxHp+(boss.phase===2?'  阶段2/2':'  阶段1/2'),W/2,by+14);
   }
-
   updateHud();
 }
 
@@ -277,10 +281,23 @@ const pauseBtn=document.getElementById('pauseBtn'),pauseOverlay=document.getElem
 function togglePause(){if(over)return;paused=!paused;pauseBtn.textContent=paused?'▶ 继续':'⏸ 暂停';pauseOverlay.style.display=paused?'flex':'none';}
 addEventListener('keydown',e=>{if(e.code==='KeyP')togglePause();});
 
-let tx=null;
-cv.addEventListener('touchstart',e=>{e.preventDefault();touchActive=true;const r=cv.getBoundingClientRect();const t=e.touches[0];player.x=Math.max(0,Math.min(W-player.w,t.clientX-r.left-player.w/2));},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(!touchActive)return;const r=cv.getBoundingClientRect();const t=e.touches[0];player.x=Math.max(0,Math.min(W-player.w,t.clientX-r.left-player.w/2));},{passive:false});
+function canvasPos(t){const r=cv.getBoundingClientRect();return {x:t.clientX-r.left,y:t.clientY-r.top};}
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();touchActive=true;
+  const p=canvasPos(e.touches[0]);
+  dragOffsetX=p.x-(player.x+player.w/2);dragOffsetY=p.y-(player.y+player.h/2);
+},{passive:false});
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();if(!touchActive)return;
+  const p=canvasPos(e.touches[0]);
+  player.x=p.x-dragOffsetX-player.w/2;player.y=p.y-dragOffsetY-player.h/2;
+  player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(0,Math.min(H-player.h,player.y));
+},{passive:false});
 cv.addEventListener('touchend',e=>{e.preventDefault();touchActive=false;},{passive:false});
+
+cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();dragOffsetX=(e.clientX-r.left)-(player.x+player.w/2);dragOffsetY=(e.clientY-r.top)-(player.y+player.h/2);cv._drag=true;});
+cv.addEventListener('mousemove',e=>{if(!cv._drag)return;const r=cv.getBoundingClientRect();player.x=(e.clientX-r.left)-dragOffsetX-player.w/2;player.y=(e.clientY-r.top)-dragOffsetY-player.h/2;player.x=Math.max(0,Math.min(W-player.w,player.x));player.y=Math.max(0,Math.min(H-player.h,player.y));});
+addEventListener('mouseup',()=>cv._drag=false);
 
 let timer;
 reset();
