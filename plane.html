@@ -7,17 +7,32 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #000; overflow: hidden; font-family: monospace; touch-action: none; }
-canvas { display: block; }
-#hud { position: fixed; top: 6px; left: 8px; color: #fff; font-size: 13px; line-height: 1.5; text-shadow: 1px 1px 0 #000; z-index: 5; }
-#menu { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
-#menu h1 { color: #0f0; font-size: 24px; margin-bottom: 24px; text-shadow: 0 0 10px #0f0; }
-.diff { width: 200px; padding: 12px; margin: 8px; font: bold 16px monospace; border: 2px solid #0f0; background: rgba(0,255,0,.08); color: #0f0; border-radius: 10px; cursor: pointer; }
+canvas { display: none; touch-action: none; }
+#hud { position: fixed; top: 6px; left: 8px; color: #fff; font-size: 13px; line-height: 1.5; text-shadow: 1px 1px 0 #000; z-index: 5; display: none; }
+#pauseBtn { position: fixed; right: 8px; top: 6px; z-index: 9; padding: 6px 12px; font: bold 13px monospace; border: 2px solid #fc4; border-radius: 8px; background: rgba(120,80,0,.5); color: #fff; cursor: pointer; display: none; }
+#homeBtn { position: fixed; left: 8px; top: 6px; z-index: 9; padding: 5px 10px; font-size: 12px; border: 1px solid #4cf; border-radius: 6px; background: rgba(0,80,180,.5); color: #fff; cursor: pointer; text-decoration: none; display: none; }
+.overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+#entryMenu { background: rgba(0,0,0,.92); }
+#entryMenu h1 { color: #0f0; font-size: 26px; margin-bottom: 40px; text-shadow: 0 0 10px #0f0; text-align: center; }
+.modeBtn { width: 240px; padding: 16px; margin: 10px; font: bold 18px monospace; border: 2px solid; border-radius: 12px; cursor: pointer; }
+#singleBtn { border-color: #0f0; background: rgba(0,255,0,.1); color: #0f0; }
+#singleBtn:hover { background: rgba(0,255,0,.3); }
+#multiBtn { border-color: #4cf; background: rgba(0,120,255,.1); color: #4cf; }
+#multiBtn:hover { background: rgba(0,120,255,.3); }
+#diffMenu { background: rgba(0,0,0,.92); display: none; }
+#diffMenu h1 { color: #0f0; font-size: 24px; margin-bottom: 24px; text-shadow: 0 0 10px #0f0; }
+.diff { width: 200px; padding: 12px; margin: 8px; font: bold 16px monospace; border: 2px solid #0f0; border-radius: 10px; background: rgba(0,255,0,.08); color: #0f0; cursor: pointer; }
 .diff:hover { background: rgba(0,255,0,.25); }
+#multiMenu { background: rgba(0,0,0,.92); display: none; }
+#multiMenu h1 { color: #4cf; font-size: 24px; margin-bottom: 16px; text-shadow: 0 0 10px #4cf; text-align: center; }
+.multiInfo { color: #fff; font-size: 14px; line-height: 1.8; text-align: center; margin-bottom: 24px; padding: 0 20px; }
+.multiInfo .p1c { color: #4cf; font-weight: bold; }
+.multiInfo .p2c { color: #f44; font-weight: bold; }
+.startBtn { padding: 14px 36px; font: bold 18px monospace; border: 2px solid #4cf; border-radius: 12px; background: rgba(0,120,255,.2); color: #4cf; cursor: pointer; }
+.startBtn:hover { background: rgba(0,120,255,.4); }
 #over { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; color: #fff; }
-#over div { font-size: 22px; margin-bottom: 10px; }
-#over button { margin-top: 10px; padding: 12px 30px; font: bold 16px monospace; border: 2px solid #4cf; background: rgba(0,120,220,.5); color: #fff; border-radius: 10px; cursor: pointer; }
-#pauseBtn { position: fixed; right: 8px; top: 6px; z-index: 9; padding: 6px 12px; font: bold 13px monospace; border: 2px solid #fc4; border-radius: 8px; background: rgba(120,80,0,.5); color: #fff; cursor: pointer; }
-#homeBtn { position: fixed; left: 8px; top: 6px; z-index: 9; padding: 5px 10px; font-size: 12px; border: 1px solid #4cf; border-radius: 6px; background: rgba(0,80,180,.5); color: #fff; cursor: pointer; text-decoration: none; }
+#over div { font-size: 22px; margin-bottom: 10px; text-align: center; }
+#over button { margin-top: 10px; padding: 12px 30px; font: bold 16px monospace; border: 2px solid #4cf; border-radius: 10px; background: rgba(0,120,220,.5); color: #fff; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -25,15 +40,32 @@ canvas { display: block; }
 <div id="hud"></div>
 <a id="homeBtn" href="index.html">🏠 大厅</a>
 <button id="pauseBtn" onclick="togglePause()">⏸ 暂停</button>
-<div id="menu">
+
+<div id="entryMenu" class="overlay">
   <h1>✈️ 飞机大战</h1>
-  <button class="diff" onclick="start('easy')">😊 简单</button>
-  <button class="diff" onclick="start('normal')">😐 普通</button>
-  <button class="diff" onclick="start('hard')">😈 困难</button>
+  <button class="modeBtn" id="singleBtn" onclick="showDiffMenu()">🎮 单人游戏</button>
+  <button class="modeBtn" id="multiBtn" onclick="showMultiMenu()">👥 双人同屏</button>
+</div>
+<div id="diffMenu" class="overlay">
+  <h1>选择难度</h1>
+  <button class="diff" onclick="startSingle('easy')">😊 简单</button>
+  <button class="diff" onclick="startSingle('normal')">😐 普通</button>
+  <button class="diff" onclick="startSingle('hard')">😈 困难</button>
+  <br><button class="diff" onclick="showEntry()" style="margin-top:16px;font-size:13px;border-color:#888;color:#aaa;">⬅ 返回</button>
+</div>
+<div id="multiMenu" class="overlay">
+  <h1>👥 双人同屏对战</h1>
+  <div class="multiInfo">
+    <span class="p1c">玩家1（蓝）</span>：WASD 移动 · 空格射击<br>
+    <span class="p2c">玩家2（红）</span>：方向键移动 · 回车射击<br><br>
+    子弹只打对方，撞机互伤<br>谁先没血谁输！
+  </div>
+  <button class="startBtn" onclick="startMulti()">🚀 开始对战</button>
+  <br><button class="diff" onclick="showEntry()" style="margin-top:16px;font-size:13px;border-color:#888;color:#aaa;">⬅ 返回</button>
 </div>
 <div id="over">
   <div id="overText"></div>
-  <button onclick="showMenu()">🔄 重新开始</button>
+  <button onclick="backToEntry()">🔄 返回主菜单</button>
 </div>
 
 <script>
@@ -44,438 +76,485 @@ function resize(){ W = cv.width = Math.min(innerWidth, 480); H = cv.height = inn
 resize();
 addEventListener('resize', resize);
 
-const menu = document.getElementById('menu');
+const entryMenu = document.getElementById('entryMenu');
+const diffMenu = document.getElementById('diffMenu');
+const multiMenu = document.getElementById('multiMenu');
 const overEl = document.getElementById('over');
 const hud = document.getElementById('hud');
 const pauseBtn = document.getElementById('pauseBtn');
+const homeBtn = document.getElementById('homeBtn');
+
+const isMobile = /Mobi|Android|iPhone|iPad|Touch/i.test(navigator.userAgent);
+if (isMobile) document.getElementById('multiBtn').style.display = 'none';
+
+let mode = '';
+let cfg, p1, p2, bullets, enemies, particles, stars;
+let score, over, paused, enemyTimer, raf, keys;
+let multiOver = false;
+let touchActive = false, dragX = 0, dragY = 0;
 
 const DIFF = {
-  easy:   { bossHp: 30, miniHp: 12, every: 250, miniEvery: 100, fire: 80, miniFire: 60, spawn: 55, ammo: 40, dodge: true },
-  normal: { bossHp: 45, miniHp: 18, every: 250, miniEvery: 100, fire: 56, miniFire: 42, spawn: 42, ammo: 30, dodge: true },
-  hard:   { bossHp: 65, miniHp: 25, every: 250, miniEvery: 100, fire: 40, miniFire: 30, spawn: 30, ammo: 20, dodge: true }
+  easy:   { spawn: 55, enemyHp: 1, enemySpeed: 1.5, ammo: 40 },
+  normal: { spawn: 42, enemyHp: 1, enemySpeed: 2.0, ammo: 30 },
+  hard:   { spawn: 30, enemyHp: 2, enemySpeed: 2.5, ammo: 20 }
 };
 
-let cfg, player, bullets, enemies, boss, miniBoss, particles, props, stars;
-let score, over, paused, enemyTimer, bossTimer, miniTimer, bossCount, miniCount, reloadTimer, raf;
-let keys = {}, touchActive = false, dragX = 0, dragY = 0;
+function showEntry() {
+  entryMenu.style.display = 'flex';
+  diffMenu.style.display = 'none';
+  multiMenu.style.display = 'none';
+  overEl.style.display = 'none';
+  cv.style.display = 'none';
+  hud.style.display = 'none';
+  pauseBtn.style.display = 'none';
+  homeBtn.style.display = 'none';
+  cancelAnimationFrame(raf);
+  over = true;
+  touchActive = false;
+}
+function showDiffMenu() { entryMenu.style.display = 'none'; diffMenu.style.display = 'flex'; }
+function showMultiMenu() { entryMenu.style.display = 'none'; multiMenu.style.display = 'flex'; }
 
 function initStars() {
   stars = [];
-  for (let i = 0; i < 80; i++) {
-    stars.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      s: Math.random() * 2 + 0.5,
-      sp: Math.random() * 1.5 + 0.8  // 速度提快了
-    });
-  }
+  for (let i = 0; i < 80; i++) stars.push({ x: Math.random()*W, y: Math.random()*H, s: Math.random()*2+0.5, sp: Math.random()*1.5+0.8 });
 }
 
-function start(d) {
+function makePlayer(x, color, keyMap, id) {
+  return { x, y: H-80, w: 36, h: 44, speed: 5, ammo: 30, maxAmmo: 30, cool: 0, hp: 3, invuln: 0, flash: 0, color, keys: keyMap, id, score: 0, dead: false };
+}
+
+function startSingle(d) {
+  mode = 'single';
   cfg = DIFF[d];
-  menu.style.display = 'none';
-  overEl.style.display = 'none';
-  reset();
-}
-
-function showMenu() {
-  overEl.style.display = 'none';
-  menu.style.display = 'flex';
-  cancelAnimationFrame(raf);
-}
-
-function reset() {
-  player = { x: W/2-20, y: H-80, w: 40, h: 48, speed: 5, ammo: cfg.ammo, maxAmmo: cfg.ammo, cool: 0, hp: 3, invuln: 0, flash: 0, scatter: 0, rapid: 0 };
-  bullets = []; enemies = []; boss = null; miniBoss = null; particles = []; props = [];
+  diffMenu.style.display = 'none';
+  cv.style.display = 'block';
+  hud.style.display = 'block';
+  pauseBtn.style.display = 'block';
+  homeBtn.style.display = 'block';
   initStars();
-  score = 0; over = false; paused = false; pauseBtn.textContent = '⏸ 暂停';
-  enemyTimer = 0; bossTimer = 0; miniTimer = 0; bossCount = 0; miniCount = 0; reloadTimer = 0;
+  p1 = makePlayer(W/2-18, '#4cf', { up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',fire:'Space' }, 1);
+  p1.maxAmmo = cfg.ammo; p1.ammo = cfg.ammo; p1.cool = 0; p1.invuln = 0;
+  p2 = null;
+  bullets = []; enemies = []; particles = [];
+  score = 0; over = false; paused = false; multiOver = false;
+  enemyTimer = 0; keys = {}; touchActive = false;
+  pauseBtn.textContent = '⏸ 暂停';
   loop();
 }
 
-function shoot() {
-  if (player.ammo <= 0 || reloadTimer > 0) return;
-  const r = player.rapid > 0, s = player.scatter > 0;
-  if (s) {
-    if (player.ammo < 3) return;
-    bullets.push({ x: player.x+player.w/2-6, y: player.y, w: 4, h: 12, vy: -9, vx: -2 });
-    bullets.push({ x: player.x+player.w/2-2, y: player.y, w: 4, h: 12, vy: -9, vx: 0 });
-    bullets.push({ x: player.x+player.w/2+2, y: player.y, w: 4, h: 12, vy: -9, vx: 2 });
-    player.ammo -= 3;
-    player.cool = r ? 4 : 8;
-  } else {
-    bullets.push({ x: player.x+player.w/2-2, y: player.y, w: 4, h: 12, vy: -9, vx: 0 });
-    if (r) bullets.push({ x: player.x+player.w/2-2, y: player.y-6, w: 4, h: 12, vy: -10, vx: 0 });
-    player.ammo -= 1;
-    player.cool = r ? 4 : 8;
-  }
-  if (player.ammo <= 0 && reloadTimer <= 0) reloadTimer = 45;
+function startMulti() {
+  mode = 'multi';
+  multiMenu.style.display = 'none';
+  cv.style.display = 'block';
+  hud.style.display = 'block';
+  pauseBtn.style.display = 'block';
+  homeBtn.style.display = 'block';
+  initStars();
+  const hw = W / 2;
+  p1 = makePlayer(hw/2-18, '#4cf', { up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',fire:'Space' }, 1);
+  p1.cool = 0; p1.invuln = 0; p1.maxAmmo = 99; p1.ammo = 99;
+  p2 = makePlayer(hw + hw/2-18, '#f44', { up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',fire:'Enter' }, 2);
+  p2.cool = 0; p2.invuln = 0; p2.maxAmmo = 99; p2.ammo = 99;
+  bullets = []; enemies = []; particles = [];
+  over = false; paused = false; multiOver = false;
+  enemyTimer = 0; keys = {}; touchActive = false;
+  pauseBtn.textContent = '⏸ 暂停';
+  loop();
+}
+
+function backToEntry() { overEl.style.display = 'none'; showEntry(); }
+
+function movePlayer(p) {
+  if (!p || p.dead) return;
+  const k = p.keys;
+  if (keys[k.left]) p.x -= p.speed;
+  if (keys[k.right]) p.x += p.speed;
+  if (keys[k.up]) p.y -= p.speed;
+  if (keys[k.down]) p.y += p.speed;
+  p.x = Math.max(0, Math.min(W-p.w, p.x));
+  p.y = Math.max(60, Math.min(H-p.h, p.y));
+}
+
+function shoot(p) {
+  if (!p || p.dead) return;
+  if (p.ammo <= 0) { p.cool = 30; return; }
+  if (p.cool > 0) return;
+  bullets.push({ x: p.x+p.w/2-1, y: p.y, w: 2, h: 8, vy: -10, vx: 0, owner: p.id, color: p.color });
+  p.ammo -= 1; p.cool = 8;
 }
 
 function spawnEnemy() {
-  enemies.push({ x: Math.random()*(W-36), y: -40, w: 36, h: 36, vy: 1.2+Math.random()*1.8, type: Math.floor(Math.random()*3) });
-}
-
-function spawnMiniBoss() {
-  miniBoss = { x: W/2-30, y: -60, w: 60, h: 50, vy: 0.8, vx: 1.5, hp: cfg.miniHp + miniCount*3, maxHp: cfg.miniHp + miniCount*3, ft: 0, enterY: 55, dodgeCd: 0 };
-  miniTimer = 1;
-}
-
-function spawnBoss() {
-  const hpScale = bossCount >= 3 ? (bossCount - 2) * 15 : 0;
-  boss = { x: W/2-44, y: -90, w: 88, h: 68, vy: 0.9, vx: 1.2, hp: cfg.bossHp + hpScale, maxHp: cfg.bossHp + hpScale, phase: 1, ft: 0, enterY: 68, dodgeCd: 0 };
-  bossTimer = 1;
-}
-
-function spawnProp(x, y) {
-  const r = Math.random();
-  let type;
-  if (r < 0.35) type = 'scatter';
-  else if (r < 0.6) type = 'ammo';
-  else if (r < 0.85) type = 'rapid';
-  else type = 'heal';
-  const colors = { scatter: '#4c4', ammo: '#f80', rapid: '#4cf', heal: '#f44' };
-  props.push({ x: x-11, y: y, w: 22, h: 22, type: type, color: colors[type], vy: 1.2, life: 420 });
-}
-
-function explode(x, y, c, n) {
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * 6.28, sp = 1 + Math.random() * 3;
-    particles.push({ x: x, y: y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 30, c: c });
+  if (mode === 'single') {
+    const ew = 28, eh = 28;
+    enemies.push({ x: Math.random()*(W-ew), y: -eh-10, w: ew, h: eh, vy: cfg.enemySpeed + Math.random(), hp: cfg.enemyHp, maxHp: cfg.enemyHp, type: Math.floor(Math.random()*3) });
+  } else {
+    const hw = W/2, ew = 26, eh = 26;
+    enemies.push({ x: Math.random()*(hw-ew), y: -eh-10, w: ew, h: eh, vy: 1.2+Math.random()*1.2, hp: 1, maxHp: 1, type: 0 });
+    enemies.push({ x: hw+Math.random()*(hw-ew), y: -eh-10, w: ew, h: eh, vy: 1.2+Math.random()*1.2, hp: 1, maxHp: 1, type: 1 });
   }
 }
 
-function hit(a, b) {
-  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+function hurtPlayer(p) {
+  if (!p || p.dead || p.invuln > 0) return;
+  p.hp--; p.invuln = 80; p.flash = 15;
+  explode(p.x+p.w/2, p.y+p.h/2, p.color, 15);
+  if (p.hp <= 0) {
+    p.dead = true;
+    explode(p.x+p.w/2, p.y+p.h/2, p.color, 30);
+    if (mode === 'multi') checkMultiEnd();
+    else { over = true; showSingleOver(); }
+  }
 }
 
-function hurtPlayer() {
-  if (player.invuln > 0 || over) return;
-  player.hp--; player.invuln = 90; player.flash = 18;
-  explode(player.x+player.w/2, player.y+player.h/2, '#4cf', 18);
-  if (player.hp <= 0) { over = true; gameOver(); }
+function checkMultiEnd() {
+  if (p1.dead && p2.dead) {
+    multiOver = true; document.getElementById('overText').innerHTML = '🤝 平局！<br>都死了！'; overEl.style.display = 'flex';
+  } else if (p1.dead) {
+    multiOver = true; document.getElementById('overText').innerHTML = '🔴 玩家2 赢了！'; overEl.style.display = 'flex';
+  } else if (p2.dead) {
+    multiOver = true; document.getElementById('overText').innerHTML = '🔵 玩家1 赢了！'; overEl.style.display = 'flex';
+  }
 }
 
-function gameOver() {
-  cancelAnimationFrame(raf);
+function showSingleOver() {
   const best = +localStorage.getItem('planeBest') || 0;
   const isNew = score > best;
   if (isNew) localStorage.setItem('planeBest', score);
-  document.getElementById('overText').innerHTML = '游戏结束<br>分数: ' + score + '<br>最高: ' + Math.max(best, score) + (isNew ? ' 🎉' : '');
+  document.getElementById('overText').innerHTML = '游戏结束<br>分数: '+score+'<br>最高: '+Math.max(best,score)+(isNew?' 🎉':'');
   overEl.style.display = 'flex';
 }
 
+function explode(x, y, c, n) {
+  for (let i = 0; i < n; i++) { const a = Math.random()*6.28, sp = 1+Math.random()*3; particles.push({ x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 28, c }); }
+}
+
+function hit(a, b) {
+  const shrink = 0.3;
+  const aw = a.w * (1 - shrink), ah = a.h * (1 - shrink);
+  const ax = a.x + (a.w - aw)/2, ay = a.y + (a.h - ah)/2;
+  const bw = b.w * (1 - shrink), bh = b.h * (1 - shrink);
+  const bx = b.x + (b.w - bw)/2, by = b.y + (b.h - bh)/2;
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
 function loop() {
-  if (over || paused) return;
+  if (over || multiOver) return;
+  if (paused) { raf = requestAnimationFrame(loop); return; }
   raf = requestAnimationFrame(loop);
   update(); draw();
 }
 
 function update() {
-  if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
-  if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
-  if (keys['ArrowUp'] || keys['KeyW']) player.y -= player.speed;
-  if (keys['ArrowDown'] || keys['KeyS']) player.y += player.speed;
-  player.x = Math.max(0, Math.min(W-player.w, player.x));
-  player.y = Math.max(60, Math.min(H-player.h, player.y));
+  movePlayer(p1);
+  if (mode === 'multi') movePlayer(p2);
 
-  if (player.cool > 0) player.cool--;
-  if (player.invuln > 0) player.invuln--;
-  if (player.flash > 0) player.flash--;
-  if (player.scatter > 0) player.scatter--;
-  if (player.rapid > 0) player.rapid--;
-  if (reloadTimer > 0) { reloadTimer--; if (reloadTimer <= 0) player.ammo = player.maxAmmo; }
-  if ((keys['Space'] || touchActive) && player.cool <= 0 && reloadTimer <= 0) shoot();
+  if (keys[p1.keys.fire]) shoot(p1);
+  if (mode === 'multi' && keys[p2.keys.fire]) shoot(p2);
+
+  [p1, p2].forEach(p => {
+    if (!p || p.dead) return;
+    if (p.cool > 0) p.cool--;
+    if (p.invuln > 0) p.invuln--;
+    if (p.flash > 0) p.flash--;
+  });
+
+  if (p1 && !p1.dead && p1.ammo < p1.maxAmmo && enemyTimer % 60 === 0) p1.ammo++;
+  if (mode === 'multi' && p2 && !p2.dead && p2.ammo < p2.maxAmmo && enemyTimer % 60 === 0) p2.ammo++;
 
   for (let i = bullets.length-1; i >= 0; i--) {
     const b = bullets[i]; b.x += b.vx; b.y += b.vy;
-    if (b.y + b.vy < 0 || b.x + b.w < 0 || b.x > W) bullets.splice(i, 1);
+    if (b.y < -15 || b.y > H) bullets.splice(i, 1);
   }
 
-  if (!boss && !miniBoss) {
-    enemyTimer++;
-    if (enemyTimer > cfg.spawn) { spawnEnemy(); enemyTimer = 0; }
-    for (const e of enemies) e.y += e.vy;
-    for (let i = enemies.length-1; i >= 0; i--) {
-      if (enemies[i].y > H) { enemies.splice(i, 1); hurtPlayer(); }
+  for (let i = bullets.length-1; i >= 0; i--) {
+    const b = bullets[i];
+    if (b.vy >= 0) continue;
+    const target = mode === 'multi' ? (b.owner === 1 ? p2 : p1) : p1;
+    if (target && !target.dead && hit(b, target)) { hurtPlayer(target); bullets.splice(i, 1); }
+  }
+
+  enemyTimer++;
+  if (enemyTimer > (mode==='single' ? cfg.spawn : 45)) { spawnEnemy(); enemyTimer = 0; }
+  for (let i = enemies.length-1; i >= 0; i--) {
+    const e = enemies[i]; e.y += e.vy;
+    if (e.y > H) { enemies.splice(i, 1); if (mode==='single') hurtPlayer(p1); continue; }
+    for (const p of [p1, p2]) {
+      if (p && !p.dead && hit(e, p)) { hurtPlayer(p); enemies.splice(i, 1); break; }
     }
   }
 
   for (let i = bullets.length-1; i >= 0; i--) {
     const b = bullets[i];
     if (b.vy >= 0) continue;
-    const bx = b.x + 1;
-    if (!boss && !miniBoss) {
-      for (let j = enemies.length-1; j >= 0; j--) {
-        const e = enemies[j];
-        if (bx < e.x+e.w && bx+2 > e.x && b.y < e.y+e.h && b.y+b.h > e.y) {
-          enemies.splice(j, 1); bullets.splice(i, 1); score += 10;
-          explode(e.x+e.w/2, e.y+e.h/2, '#f55', 14);
-          if (Math.random() < 0.18) spawnProp(e.x+e.w/2, e.y+e.h/2);
-          break;
+    for (let j = enemies.length-1; j >= 0; j--) {
+      const e = enemies[j];
+      if (hit(b, e)) {
+        e.hp--;
+        bullets.splice(i, 1);
+        explode(b.x, b.y, '#ff0', 4);
+        if (e.hp <= 0) {
+          enemies.splice(j, 1);
+          explode(e.x+e.w/2, e.y+e.h/2, '#f55', 12);
+          if (mode === 'single') score += 10;
+          else { const owner = b.owner === 1 ? p1 : p2; if(owner) owner.score += 10; }
         }
+        break;
       }
     }
   }
 
-  // 小 Boss
-  if (miniBoss) {
-    if (miniTimer === 1) {
-      miniBoss.y += miniBoss.vy;
-      if (miniBoss.y >= miniBoss.enterY) miniTimer = 2;
-    } else if (miniTimer === 2) {
-      miniBoss.x += miniBoss.vx;
-      if (miniBoss.x <= 0) { miniBoss.x = 0; miniBoss.vx = Math.abs(miniBoss.vx); }
-      if (miniBoss.x + miniBoss.w >= W) { miniBoss.x = W - miniBoss.w; miniBoss.vx = -Math.abs(miniBoss.vx); }
-      if (miniBoss.dodgeCd <= 0) {
-        for (const b of bullets) {
-          if (b.vy >= 0) continue;
-          if (b.y < miniBoss.y+miniBoss.h+50 && b.y > miniBoss.y-150 && b.x+b.w > miniBoss.x && b.x < miniBoss.x+miniBoss.w) {
-            miniBoss.vx = (b.x < miniBoss.x+miniBoss.w/2) ? Math.abs(miniBoss.vx)*1.3 : -Math.abs(miniBoss.vx)*1.3;
-            miniBoss.dodgeCd = 30;
-            break;
-          }
-        }
-      } else { miniBoss.dodgeCd--; }
-      miniBoss.ft++;
-      if (miniBoss.ft > cfg.miniFire) {
-        miniBoss.ft = 0;
-        bullets.push({ x: miniBoss.x+miniBoss.w/2-2, y: miniBoss.y+miniBoss.h, w: 4, h: 8, vy: 3.5, vx: 0 });
-        bullets.push({ x: miniBoss.x+miniBoss.w/2-8, y: miniBoss.y+miniBoss.h, w: 4, h: 8, vy: 3, vx: -0.5 });
-        bullets.push({ x: miniBoss.x+miniBoss.w/2+4, y: miniBoss.y+miniBoss.h, w: 4, h: 8, vy: 3, vx: 0.5 });
-      }
-    }
-  }
-
-  for (let i = bullets.length-1; i >= 0; i--) {
-    const b = bullets[i];
-    if (b.vy >= 0) continue;
-    const bx = b.x + 1;
-    if (miniBoss && miniTimer === 2) {
-      if (bx < miniBoss.x+miniBoss.w && bx+2 > miniBoss.x && b.y < miniBoss.y+miniBoss.h && b.y+b.h > miniBoss.y) {
-        miniBoss.hp--; bullets.splice(i, 1); explode(b.x, b.y, '#ff0', 4);
-        if (miniBoss.hp <= 0) {
-          explode(miniBoss.x+miniBoss.w/2, miniBoss.y+miniBoss.h/2, '#fa0', 28);
-          spawnProp(miniBoss.x+miniBoss.w/2, miniBoss.y+miniBoss.h/2);
-          miniBoss = null; miniTimer = 0; miniCount++;
-        }
-      }
-    }
-  }
-
-  for (let i = bullets.length-1; i >= 0; i--) {
-    const b = bullets[i];
-    if (b.vy <= 0) continue;
-    if (hit(b, player) && player.invuln <= 0) { hurtPlayer(); bullets.splice(i, 1); explode(b.x, b.y, '#0ff', 6); }
-  }
-
-  if (miniBoss && miniTimer === 2 && hit(miniBoss, player) && player.invuln <= 0) {
-    hurtPlayer(); explode(miniBoss.x+miniBoss.w/2, miniBoss.y+miniBoss.h/2, '#fa0', 20); miniBoss = null; miniTimer = 0;
-  }
-
-  if (!boss && !miniBoss && miniTimer === 0) {
-    if (score >= cfg.miniEvery * (miniCount + 1)) spawnMiniBoss();
-  }
-
-  // 正式 Boss
-  if (boss) {
-    if (bossTimer === 1) { boss.y += boss.vy; if (boss.y >= boss.enterY) bossTimer = 2; }
-    else if (bossTimer === 2) {
-      if (boss.phase === 1 && boss.hp <= boss.maxHp * 0.5) { boss.phase = 2; explode(boss.x+boss.w/2, boss.y+boss.h/2, '#ff0', 26); }
-      boss.x += boss.vx;
-      if (boss.x <= 0) { boss.x = 0; boss.vx = Math.abs(boss.vx); }
-      if (boss.x + boss.w >= W) { boss.x = W - boss.w; boss.vx = -Math.abs(boss.vx); }
-      if (boss.dodgeCd > 0) boss.dodgeCd--;
-      if (boss.dodgeCd <= 0) {
-        for (const b of bullets) {
-          if (b.vy >= 0) continue;
-          if (b.y < boss.y+boss.h+60 && b.y > boss.y-200 && b.x+b.w > boss.x && b.x < boss.x+boss.w) {
-            boss.vx = (b.x < boss.x+boss.w/2) ? Math.abs(boss.vx) : -Math.abs(boss.vx);
-            boss.dodgeCd = 25;
-            break;
-          }
-        }
-      }
-      boss.ft++;
-      const fireInt = boss.phase === 2 ? Math.max(24, cfg.fire-10) : cfg.fire;
-      if (boss.ft > fireInt) {
-        boss.ft = 0;
-        const shots = boss.phase === 2 ? 5 : 3;
-        for (let i = 0; i < shots; i++) bullets.push({ x: boss.x+boss.w/2-2, y: boss.y+boss.h, w: 4, h: 8, vy: 3.2, vx: (i-(shots-1)/2)*0.6 });
-      }
-      if (hit(boss, player) && player.invuln <= 0) hurtPlayer();
-    }
-  }
-
-  for (let i = bullets.length-1; i >= 0; i--) {
-    const b = bullets[i];
-    if (b.vy >= 0) continue;
-    const bx = b.x + 1;
-    if (boss && bossTimer === 2) {
-      if (bx < boss.x+boss.w && bx+2 > boss.x && b.y < boss.y+boss.h && b.y+b.h > boss.y) {
-        boss.hp--; bullets.splice(i, 1); explode(b.x, b.y, '#ff0', 4);
-        if (boss.hp <= 0) {
-          bullets = bullets.filter(x => x.vy < 0);
-          explode(boss.x+boss.w/2, boss.y+boss.h/2, '#fa0', 34);
-          score += 200;
-          spawnProp(boss.x+boss.w/2, boss.y+boss.h/2);
-          boss = null; bossTimer = 0; bossCount++;
-        }
-      }
-    }
-  }
-
-  for (let i = bullets.length-1; i >= 0; i--) {
-    const b = bullets[i];
-    if (b.vy <= 0) continue;
-    if (hit(b, player) && player.invuln <= 0) { hurtPlayer(); bullets.splice(i, 1); explode(b.x, b.y, '#0ff', 6); }
-  }
-
-  if (!boss && !miniBoss) {
-    if (score >= cfg.every * (bossCount + 1)) spawnBoss();
-  }
-
-  // 道具
-  for (let i = props.length-1; i >= 0; i--) {
-    const p = props[i]; p.y += p.vy; p.life--;
-    if (p.life <= 0) { props.splice(i, 1); continue; }
-    if (hit(p, player)) {
-      if (p.type === 'scatter') player.scatter = 480;
-      if (p.type === 'rapid') player.rapid = 480;
-      if (p.type === 'ammo') { player.maxAmmo += 10; player.ammo = player.maxAmmo; }
-      if (p.type === 'heal') player.hp = Math.min(3, player.hp + 1);
-      explode(p.x+p.w/2, p.y+p.h/2, p.color, 10);
-      props.splice(i, 1);
-    }
-  }
+  if (mode === 'multi' && !p1.dead && !p2.dead && hit(p1, p2)) { hurtPlayer(p1); hurtPlayer(p2); }
 
   for (let i = particles.length-1; i >= 0; i--) {
-    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life--;
-    if (p.life <= 0) particles.splice(i, 1);
+    const p = particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life--;
+    if (p.life<=0) particles.splice(i, 1);
   }
-}
-
-function drawPlayer(p) {
-  ctx.save();
-  ctx.globalAlpha = (p.invuln > 0 && Math.floor(p.invuln/4)%2 === 0) ? 0.35 : 1;
-  const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y+p.h);
-  g.addColorStop(0, '#eef'); g.addColorStop(0.5, '#5599ff'); g.addColorStop(1, '#2255cc');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.moveTo(p.x+p.w/2, p.y); ctx.lineTo(p.x+4, p.y+p.h-8); ctx.lineTo(p.x+12, p.y+p.h); ctx.lineTo(p.x+p.w-12, p.y+p.h); ctx.lineTo(p.x+p.w-4, p.y+p.h-8); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#3377dd';
-  ctx.beginPath(); ctx.moveTo(p.x, p.y+p.h*0.45); ctx.lineTo(p.x-10, p.y+p.h*0.7); ctx.lineTo(p.x+8, p.y+p.h*0.6); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(p.x+p.w, p.y+p.h*0.45); ctx.lineTo(p.x+p.w+10, p.y+p.h*0.7); ctx.lineTo(p.x+p.w-8, p.y+p.h*0.6); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#aaf'; ctx.beginPath(); ctx.ellipse(p.x+p.w/2, p.y+p.h*0.28, 8, 10, 0, 0, 6.28); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(p.x+p.w/2-3, p.y+p.h*0.25, 3, 4, 0, 0, 6.28); ctx.fill();
-  const fl = 4 + Math.random()*6;
-  ctx.fillStyle = '#f80'; ctx.beginPath(); ctx.moveTo(p.x+p.w/2-5, p.y+p.h); ctx.lineTo(p.x+p.w/2, p.y+p.h+fl); ctx.lineTo(p.x+p.w/2+5, p.y+p.h); ctx.fill();
-  ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.moveTo(p.x+p.w/2-3, p.y+p.h); ctx.lineTo(p.x+p.w/2, p.y+p.h+fl*0.7); ctx.lineTo(p.x+p.w/2+3, p.y+p.h); ctx.fill();
-  ctx.restore();
-}
-
-function drawEnemy(e) {
-  const pal = [['#c22','#f55','#800'],['#2c2','#5f5','#080'],['#82c','#c5f','#408']][e.type];
-  ctx.fillStyle = pal[0];
-  ctx.beginPath(); ctx.moveTo(e.x+e.w/2, e.y); ctx.lineTo(e.x+4, e.y+e.h-6); ctx.lineTo(e.x+10, e.y+e.h); ctx.lineTo(e.x+e.w-10, e.y+e.h); ctx.lineTo(e.x+e.w-4, e.y+e.h-6); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = pal[1]; ctx.fillRect(e.x-4, e.y+e.h*0.4, 8, 10); ctx.fillRect(e.x+e.w-4, e.y+e.h*0.4, 8, 10);
-  ctx.fillStyle = pal[2]; ctx.beginPath(); ctx.ellipse(e.x+e.w/2, e.y+e.h*0.38, 5, 6, 0, 0, 6.28); ctx.fill();
-  ctx.fillStyle = '#ff0'; ctx.fillRect(e.x+e.w/2-2, e.y+e.h-3, 4, 3);
-}
-
-function drawMiniBoss(m) {
-  ctx.fillStyle = '#808';
-  ctx.beginPath(); ctx.moveTo(m.x+m.w/2, m.y); ctx.lineTo(m.x, m.y+m.h/2); ctx.lineTo(m.x+m.w/2, m.y+m.h); ctx.lineTo(m.x+m.w, m.y+m.h/2); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#c0f';
-  ctx.beginPath(); ctx.moveTo(m.x+m.w/2, m.y+5); ctx.lineTo(m.x+5, m.y+m.h/2); ctx.lineTo(m.x+m.w/2, m.y+m.h-5); ctx.lineTo(m.x+m.w-5, m.y+m.h/2); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#f00';
-  ctx.beginPath(); ctx.arc(m.x+m.w/2, m.y+m.h/2, 8, 0, 6.28); ctx.fill();
-  const bw = 120, bx = m.x + m.w/2 - 60;
-  ctx.fillStyle = '#333'; ctx.fillRect(bx, m.y - 14, bw, 8);
-  ctx.fillStyle = '#c0f'; ctx.fillRect(bx, m.y - 14, bw * Math.max(0, m.hp/m.maxHp), 8);
-  ctx.strokeStyle = '#fff'; ctx.strokeRect(bx, m.y - 14, bw, 8);
-}
-
-function drawBoss(b) {
-  const c1 = b.phase === 2 ? '#f80' : '#c00';
-  const g = ctx.createLinearGradient(b.x, b.y, b.x, b.y+b.h); g.addColorStop(0, '#320'); g.addColorStop(1, c1);
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.moveTo(b.x+b.w/2, b.y); ctx.lineTo(b.x+6, b.y+b.h*0.6); ctx.lineTo(b.x+14, b.y+b.h); ctx.lineTo(b.x+b.w-14, b.y+b.h); ctx.lineTo(b.x+b.w-6, b.y+b.h*0.6); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#666'; ctx.fillRect(b.x+8, b.y+b.h-4, 6, 12); ctx.fillRect(b.x+b.w-14, b.y+b.h-4, 6, 12);
-  ctx.fillStyle = '#f00'; ctx.beginPath(); ctx.ellipse(b.x+b.w/2, b.y+b.h*0.4, 14, 10, 0, 0, 6.28); ctx.fill();
-  ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.ellipse(b.x+b.w/2, b.y+b.h*0.38, 5, 5, 0, 0, 6.28); ctx.fill();
-  if (b.phase === 2) { ctx.strokeStyle = 'rgba(255,200,0,.6)'; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.arc(b.x+b.w/2, b.y+b.h/2, b.w*0.6, 0, 6.28); ctx.stroke(); ctx.setLineDash([]); }
 }
 
 function draw() {
-  ctx.clearRect(0, 0, W, H);
-
-  // 星星：每帧直接画+滚动
+  ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#fff';
   for (const s of stars) {
     s.y += s.sp;
-    if (s.y > H) { s.y = -s.s; s.x = Math.random() * W; }
-    ctx.globalAlpha = 0.6;
-    ctx.fillRect(s.x, s.y, s.s, s.s);
+    if (s.y > H) { s.y = -s.s; s.x = Math.random()*W; }
+    ctx.globalAlpha = 0.6; ctx.fillRect(s.x, s.y, s.s, s.s);
   }
   ctx.globalAlpha = 1;
 
-  if (!over) drawPlayer(player);
-  if (player.flash > 0) { ctx.fillStyle = 'rgba(255,0,0,'+(0.28*player.flash/18)+')'; ctx.fillRect(0, 0, W, H); }
+  if (mode === 'multi') {
+    ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  if (!p1.dead) drawPlayer(p1);
+  if (mode==='multi' && !p2.dead) drawPlayer(p2);
 
   for (const b of bullets) {
-    if (b.vy < 0) { ctx.fillStyle = '#ff5'; ctx.shadowColor = '#ff0'; ctx.shadowBlur = 6; ctx.fillRect(b.x, b.y, 4, 12); ctx.shadowBlur = 0; }
-    else { ctx.fillStyle = '#0ff'; ctx.fillRect(b.x, b.y, 4, 8); }
+    ctx.fillStyle = b.color || '#ff5';
+    ctx.shadowColor = b.color || '#ff0'; ctx.shadowBlur = 6;
+    ctx.fillRect(b.x, b.y, b.w, b.h); ctx.shadowBlur = 0;
   }
   for (const e of enemies) drawEnemy(e);
-  if (miniBoss) drawMiniBoss(miniBoss);
-  if (boss) drawBoss(boss);
-
-  for (const p of props) {
-    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
-    const label = p.type === 'scatter' ? 'S' : p.type === 'ammo' ? 'M' : p.type === 'rapid' ? 'R' : 'H';
-    ctx.fillText(label, p.x+p.w/2, p.y+p.h/2+5);
-  }
-  for (const p of particles) { ctx.globalAlpha = p.life/30; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); }
+  for (const p of particles) { ctx.globalAlpha = p.life/28; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); }
   ctx.globalAlpha = 1;
 
-  if (boss) {
-    const bw = Math.min(380, W-20), bx = (W-bw)/2;
-    ctx.fillStyle = '#333'; ctx.fillRect(bx, 10, bw, 16);
-    ctx.fillStyle = '#f80'; ctx.fillRect(bx, 10, bw * Math.max(0, boss.hp/boss.maxHp), 16);
-    ctx.strokeStyle = '#fff'; ctx.strokeRect(bx, 10, bw, 16);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('BOSS '+boss.hp+'/'+boss.maxHp+(boss.phase===2?' 阶段2/2':' 阶段1/2'), W/2, 24);
+  if (paused) {
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = 'bold 28px monospace';
+    ctx.fillText('暂停中', W/2, H/2);
   }
 
-  let h = 'HP '; for (let i = 0; i < 3; i++) h += i < player.hp ? '❤️' : '🖤';
-  h += '<br>弹匣 '+player.ammo+'/'+player.maxAmmo;
-  if (reloadTimer > 0) h += '<br>换弹 '+Math.ceil(reloadTimer/30)+'s';
-  if (player.scatter > 0) h += '<br>🟩散射 '+Math.ceil(player.scatter/60)+'s';
-  if (player.rapid > 0) h += '<br>🟦速射 '+Math.ceil(player.rapid/60)+'s';
-  h += '<br>分数 '+score+'<br>最高 '+(+localStorage.getItem('planeBest')||0);
-  hud.innerHTML = h;
+  if (mode === 'single') {
+    let h = 'HP '; for(let i=0;i<3;i++) h += i<p1.hp?'❤️':'🖤';
+    h += '<br>弹匣 '+p1.ammo+'/'+p1.maxAmmo+'<br>分数 '+score+'<br>最高 '+(+localStorage.getItem('planeBest')||0);
+    hud.innerHTML = h;
+  } else {
+    let h = '<span style="color:#4cf">P1 ❤️'.repeat(p1.hp)+'🖤'.repeat(3-p1.hp)+' '+p1.score+'</span><br>';
+    h += '<span style="color:#f44">P2 ❤️'.repeat(p2.hp)+'🖤'.repeat(3-p2.hp)+' '+p2.score+'</span>';
+    hud.innerHTML = h;
+  }
 }
 
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') e.preventDefault(); if (e.code === 'KeyP') togglePause(); });
-addEventListener('keyup', e => { keys[e.code] = false; });
-function togglePause() { if (over) return; paused = !paused; pauseBtn.textContent = paused ? '▶ 继续' : '⏸ 暂停'; if (!paused) loop(); }
+// ===== 我方飞机：流线战机（尖头朝上）=====
+function drawPlayer(p) {
+  ctx.save();
+  if (p.invuln > 0 && Math.floor(p.invuln/4)%2===0) ctx.globalAlpha = 0.35;
+  const cx = p.x + p.w/2;
 
-cv.addEventListener('touchstart', e => {
-  e.preventDefault(); touchActive = true;
+  // 尾焰
+  const fl = 4 + Math.random()*5;
+  const fg = ctx.createLinearGradient(cx, p.y+p.h, cx, p.y+p.h+fl+4);
+  fg.addColorStop(0, '#ff4400');
+  fg.addColorStop(1, 'rgba(255,200,0,0)');
+  ctx.fillStyle = fg;
+  ctx.beginPath();
+  ctx.moveTo(cx - 5, p.y + p.h);
+  ctx.lineTo(cx, p.y + p.h + fl + 4);
+  ctx.lineTo(cx + 5, p.y + p.h);
+  ctx.fill();
+
+  // 机身渐变
+  const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y+p.h);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.3, p.color);
+  grad.addColorStop(1, '#113366');
+  ctx.fillStyle = grad;
+
+  // 主机身（尖头朝上）
+  ctx.beginPath();
+  ctx.moveTo(cx, p.y + 2);
+  ctx.lineTo(p.x + p.w - 3, p.y + p.h * 0.55);
+  ctx.lineTo(p.x + p.w, p.y + p.h * 0.7);
+  ctx.lineTo(p.x + p.w - 6, p.y + p.h * 0.75);
+  ctx.lineTo(p.x + p.w - 10, p.y + p.h);
+  ctx.lineTo(cx, p.y + p.h - 4);
+  ctx.lineTo(p.x + 10, p.y + p.h);
+  ctx.lineTo(p.x + 6, p.y + p.h * 0.75);
+  ctx.lineTo(p.x, p.y + p.h * 0.7);
+  ctx.lineTo(p.x + 3, p.y + p.h * 0.55);
+  ctx.closePath();
+  ctx.fill();
+
+  // 驾驶舱
+  ctx.fillStyle = 'rgba(150,220,255,.7)';
+  ctx.beginPath();
+  ctx.ellipse(cx, p.y + p.h * 0.32, 5, 7, 0, 0, 6.28);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.beginPath();
+  ctx.ellipse(cx - 1.5, p.y + p.h * 0.28, 2, 3, -0.3, 0, 6.28);
+  ctx.fill();
+
+  // 引擎
+  ctx.fillStyle = '#113366';
+  ctx.fillRect(p.x + 1, p.y + p.h * 0.65, 5, 4);
+  ctx.fillRect(p.x + p.w - 6, p.y + p.h * 0.65, 5, 4);
+  ctx.fillStyle = '#4cf';
+  ctx.fillRect(p.x + 2, p.y + p.h * 0.66, 3, 2);
+  ctx.fillRect(p.x + p.w - 5, p.y + p.h * 0.66, 3, 2);
+
+  ctx.restore();
+}
+
+// ===== 三种敌机（全部头朝玩家/朝下）=====
+function drawEnemy(e) {
+  const cx = e.x + e.w/2;
+  const cy = e.y + e.h/2;
+
+  switch(e.type) {
+    // 类型0：红色俯冲战机（尖头朝下！）
+    case 0: {
+      const grad = ctx.createLinearGradient(e.x, e.y, e.x, e.y+e.h);
+      grad.addColorStop(0, '#660000');
+      grad.addColorStop(0.5, '#cc0000');
+      grad.addColorStop(1, '#ff8888');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(cx, e.y + e.h - 2);       // 机头尖（朝下！）
+      ctx.lineTo(e.x + e.w - 3, cy + 2);   // 右翼下
+      ctx.lineTo(e.x + e.w - 1, cy - 4);   // 右翼尖
+      ctx.lineTo(cx + 5, e.y + 3);         // 右尾（顶部）
+      ctx.lineTo(cx, e.y);                 // 尾喷口（顶部）
+      ctx.lineTo(cx - 5, e.y + 3);         // 左尾
+      ctx.lineTo(e.x + 1, cy - 4);         // 左翼尖
+      ctx.lineTo(e.x + 3, cy + 2);         // 左翼下
+      ctx.closePath();
+      ctx.fill();
+      // 座舱（靠近顶部）
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.beginPath();
+      ctx.ellipse(cx, e.y + e.h * 0.55, 4, 3, 0, 0, 6.28);
+      ctx.fill();
+      // 尾焰（在顶部！）
+      const f = 3 + Math.random()*4;
+      ctx.fillStyle = '#f80';
+      ctx.beginPath();
+      ctx.moveTo(cx - 3, e.y);
+      ctx.lineTo(cx, e.y - f);
+      ctx.lineTo(cx + 3, e.y);
+      ctx.fill();
+      break;
+    }
+
+    // 类型1：绿色UFO（光环朝下照）
+    case 1: {
+      const grad = ctx.createRadialGradient(cx, e.y+e.h-6, 1, cx, e.y+e.h-8, 10);
+      grad.addColorStop(0, '#88ff88');
+      grad.addColorStop(1, '#00aa00');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, e.y + e.h - 8, 10, 6, 0, 0, 6.28);
+      ctx.fill();
+      // 底部光环（朝下）
+      ctx.fillStyle = 'rgba(100,255,100,.4)';
+      ctx.beginPath();
+      ctx.ellipse(cx, e.y + e.h - 2, 12, 3, 0, 0, 6.28);
+      ctx.fill();
+      // 闪烁灯
+      ctx.fillStyle = Math.floor(Date.now()/150)%2 ? '#0f0' : '#030';
+      ctx.beginPath(); ctx.arc(cx - 5, e.y + e.h - 2, 1.5, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 5, e.y + e.h - 2, 1.5, 0, 6.28); ctx.fill();
+      break;
+    }
+
+    // 类型2：紫色导弹（尖头朝下冲下来！）
+    case 2: {
+      const grad = ctx.createLinearGradient(e.x, e.y, e.x+e.w, e.y);
+      grad.addColorStop(0, '#4400aa');
+      grad.addColorStop(0.5, '#aa44ff');
+      grad.addColorStop(1, '#220055');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(cx, e.y + e.h);           // 尖头（朝下！）
+      ctx.lineTo(e.x + e.w, cy);           // 右宽
+      ctx.lineTo(cx, e.y);                 // 尾翼（朝上！）
+      ctx.lineTo(e.x, cy);                 // 左宽
+      ctx.closePath();
+      ctx.fill();
+      // 尾翼细节
+      ctx.fillStyle = 'rgba(255,100,255,.6)';
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, e.y + 2);
+      ctx.lineTo(cx + 6, e.y + 2);
+      ctx.lineTo(cx, e.y + 8);
+      ctx.closePath();
+      ctx.fill();
+      // 尾焰（在顶部！）
+      const f = 5 + Math.random()*6;
+      const fg = ctx.createLinearGradient(cx, e.y, cx, e.y - f - 4);
+      fg.addColorStop(0, '#ff4400');
+      fg.addColorStop(1, 'rgba(255,200,0,0)');
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, e.y);
+      ctx.lineTo(cx, e.y - f - 4);
+      ctx.lineTo(cx + 4, e.y);
+      ctx.fill();
+      break;
+    }
+  }
+}
+
+addEventListener('keydown', e => { keys[e.code] = true; if(e.code==='Space'||e.code==='Enter') e.preventDefault(); if(e.code==='KeyP') togglePause(); });
+addEventListener('keyup', e => { keys[e.code] = false; });
+function togglePause() { if(over||multiOver) return; paused=!paused; pauseBtn.textContent=paused?'▶ 继续':'⏸ 暂停'; }
+
+document.addEventListener('touchstart', e => {
+  if (mode !== 'single' || !p1 || p1.dead || e.target !== cv) return;
+  e.preventDefault();
+  touchActive = true;
   const r = cv.getBoundingClientRect();
-  dragX = e.touches[0].clientX - r.left - (player.x + player.w/2);
-  dragY = e.touches[0].clientY - r.top - (player.y + player.h/2);
+  const tx = e.touches[0].clientX - r.left;
+  const ty = e.touches[0].clientY - r.top;
+  dragX = tx - (p1.x + p1.w/2);
+  dragY = ty - (p1.y + p1.h/2);
+  p1.invuln = 30;
+  p1.x = tx - dragX - p1.w/2;
+  p1.y = ty - dragY - p1.h/2;
+  p1.x = Math.max(0, Math.min(W-p1.w, p1.x));
+  p1.y = Math.max(60, Math.min(H-p1.h, p1.y));
+  shoot(p1);
 }, { passive: false });
-cv.addEventListener('touchmove', e => {
-  e.preventDefault(); if (!touchActive) return;
+
+document.addEventListener('touchmove', e => {
+  if (!touchActive || mode !== 'single' || !p1 || p1.dead) return;
+  e.preventDefault();
   const r = cv.getBoundingClientRect();
-  player.x = e.touches[0].clientX - r.left - dragX - player.w/2;
-  player.y = e.touches[0].clientY - r.top - dragY - player.h/2;
-  player.x = Math.max(0, Math.min(W-player.w, player.x));
-  player.y = Math.max(60, Math.min(H-player.h, player.y));
+  const tx = e.touches[0].clientX - r.left;
+  const ty = e.touches[0].clientY - r.top;
+  p1.x = tx - dragX - p1.w/2;
+  p1.y = ty - dragY - p1.h/2;
+  p1.x = Math.max(0, Math.min(W-p1.w, p1.x));
+  p1.y = Math.max(60, Math.min(H-p1.h, p1.y));
+  shoot(p1);
 }, { passive: false });
-cv.addEventListener('touchend', e => { e.preventDefault(); touchActive = false; }, { passive: false });
+
+document.addEventListener('touchend', e => {
+  touchActive = false;
+}, {});
+
+showEntry();
 </script>
 </body>
 </html>
