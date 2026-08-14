@@ -1,1 +1,40 @@
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 - 连接错误</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a; color: #e00; font-family: monospace;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100vh; padding: 20px; text-align: center;
+}
+.err { font-size: clamp(48px, 15vw, 120px); font-weight: bold; text-shadow: 0 0 20px #f00; animation: shake .5s infinite; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+h1 { font-size: 24px; margin: 16px 0 8px; color: #fff; }
+p { color: #888; font-size: 14px; margin: 4px 0; line-height: 1.6; }
+.bar { width: min(90vw, 360px); height: 4px; background: #222; margin: 20px 0; border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 65%; background: #e00; animation: load 2s ease-in-out infinite; }
+@keyframes load { 0%{width:0%} 100%{width:65%} }
+.tip { color: #555; font-size: 12px; margin-top: 16px; }
+.btn {
+  color: #0ff; text-decoration: none; border: 1px solid #0ff; padding: 8px 16px;
+  border-radius: 6px; margin-top: 20px; font-size: 13px; cursor: pointer;
+  background: transparent; font-family: monospace;
+}
+.btn:hover { background: rgba(0,255,255,.1); }
+</style>
+</head>
+<body>
+<div class="err">404</div>
+<h1>连接已重置</h1>
+<p>无法连接到服务器</p>
+<p>错误代码：ERR_CONNECTION_RESET</p>
+<p>请检查你的网络连接后重试</p>
+<div class="bar"><i></i></div>
+<p class="tip">如果你认为这是网站的问题，请联系管理员</p>
+<button class="btn" onclick="location.href='tetris.html'">← 返回大厅</button>
+</body>
+</html>
