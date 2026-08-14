@@ -13,14 +13,12 @@ body {
   font-family: monospace;
   min-height: 100vh;
   min-height: 100dvh;
-  /* 关键：允许滚动 */
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: max(env(safe-area-inset-top), 20px) 16px max(env(safe-area-inset-bottom), 30px);
 }
 
-/* 启动画面 - 盖在最上面，不影响页面滚动结构 */
 #splash {
   position: fixed;
   inset: 0;
@@ -74,7 +72,6 @@ body {
   to { width: 100%; }
 }
 
-/* 主内容区 */
 #home {
   display: flex;
   flex-direction: column;
@@ -119,7 +116,6 @@ p.tip {
   font-size: 18px;
   box-shadow: 0 0 14px rgba(0,255,0,.35);
   transition: .2s;
-  /* 防止 iOS 长按选中 */
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -146,14 +142,12 @@ p.tip {
 </head>
 <body>
 
-<!-- 启动画面 -->
 <div id="splash">
   <div class="logo">✈️🐍🏃🧱 BOXIANJIAN</div>
   <div class="sub">小游戏合集 · 加载中…</div>
   <div class="bar"><i></i></div>
 </div>
 
-<!-- 主内容 -->
 <div id="home">
   <h1>🎮 Boxianjian 小游戏</h1>
   <p class="tip">点击进入，永久免费 · 手机电脑都能玩</p>
@@ -167,7 +161,6 @@ p.tip {
 </div>
 
 <script>
-// 启动画面消失
 setTimeout(() => {
   const s = document.getElementById('splash');
   s.classList.add('hide');
