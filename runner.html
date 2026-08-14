@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>像素跑酷</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #050d05; font-family: monospace; overflow: hidden; color: #0f0; }
+body { display: flex; align-items: center; justify-content: center; flex-direction: column; background: radial-gradient(circle at 50% 30%, #0a220a 0%, #000 70%); padding: 12px; }
+#wrap { position: relative; width: 100%; max-width: 960px; }
+canvas { width: 100% !important; height: auto !important; aspect-ratio: 4 / 3; background: #020a02; box-shadow: 0 0 22px #0f0, inset 0 0 18px rgba(0,255,0,.25); border: 2px solid #0f0; border-radius: 6px; display: block; touch-action: none; }
+#hud { position: absolute; left: 10px; top: 8px; font-size: clamp(12px, 1.8vw, 16px); line-height: 1.4; text-shadow: 0 0 6px #0f0; pointer-events: none; z-index: 5; }
+button { background: transparent; color: #0f0; border: 1px solid #0f0; font-family: monospace; cursor: pointer; text-shadow: 0 0 6px #0f0; box-shadow: 0 0 8px rgba(0,255,0,.5); }
+#restartBtn { position: absolute; left: 50%; top: 54%; transform: translate(-50%,-50%); padding: 10px 22px; font-size: 16px; border-radius: 6px; display: none; z-index: 9; }
+#homeBtn { position: absolute; left: 10px; bottom: -32px; padding: 5px 10px; font-size: 13px; border-radius: 4px; text-decoration: none; z-index: 5; color: #0f0; border: 1px solid #0f0; }
+#hint { margin-top: 40px; font-size: 12px; opacity: .75; text-shadow: 0 0 5px #0f0; text-align: center; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hud">分数: 0<br>最高: 0<br>距离: 0m<br>金币: 0</div>
+  <button id="restartBtn">重新开始</button>
+  <a id="homeBtn" href="/">🏠 大厅</a>
+</div>
+<div id="hint">空格 / 上 / W / 点屏幕 = 跳 · P 暂停 · R 重开</div>
+<script>
+const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+const LW = 640, LH = 480;
+canvas.width = LW; canvas.height = LH;
+const groundY = LH - 80;
+const hud = document.getElementById('hud'), restartBtn = document.getElementById('restartBtn');
+
+function getBest() { return +localStorage.getItem('runner_best') || 0; }
+function setBest(v) { localStorage.setItem('runner_best', v); }
+
+let player, obstacles, coins, particles, clouds, stars, speed, score, dist, coinCount, over, paused, timer, spawnX, gravity;
+
+function reset() {
+  player = { x: 80, y: groundY - 40, w: 22, h: 40, vy: 0, onGround: true, frame: 0 };
+  obstacles = []; coins = []; particles = [];
+  clouds = [];
+  for (let i = 0; i < 5; i++) clouds.push({ x: Math.random() * LW, y: 20 + Math.random() * 80, s: 0.5 + Math.random() * 0.8, sp: 0.2 + Math.random() * 0.3 });
+  stars = [];
+  for (let i = 0; i < 50; i++) stars.push({ x: Math.random() * LW, y: Math.random() * groundY * 0.6, r: Math.random() * 1.2, tw: Math.random() * Math.PI * 2 });
+  speed = 4.5; score = 0; dist = 0; coinCount = 0; over = false; paused = false; gravity = 0.8; spawnX = LW + 60;
+  restartBtn.style.display = 'none';
+  clearInterval(timer);
+  timer = setInterval(step, 1000 / 60);
+  updateHud(); draw();
+}
+
+function updateHud() {
+  hud.innerHTML = `分数: ${score}<br>最高: ${getBest()}<br>距离: ${Math.floor(dist/10)}m<br>金币: ${coinCount}`;
+}
+
+function jump() {
+  if (player.onGround && !over && !paused) {
+    player.vy = -14;
+    player.onGround = false;
+  }
+}
+
+// 难度曲线：随距离递增
+function getDifficulty() {
+  const d = dist / 10; // 以"米"为单位
+  return {
+    gapChance: Math.min(0.45, 0.20 + d / 3000),        // 缺口概率 20% → 45%
+    spikeChance: Math.min(0.60, 0.35 + d / 2500),      // 尖刺概率 35% → 60%
+    coinChance: Math.max(0.35, 0.70 - d / 2000),        // 金币概率 70% → 35%
+    minSpacing: Math.max(120, 220 - d / 30),            // 最小间距 220 → 120
+    maxSpacing: Math.max(200, 360 - d / 25),            // 最大间距 360 → 200
+  };
+}
+
+function spawn() {
+  const diff = getDifficulty();
+  const r = Math.random();
+
+  if (r < diff.gapChance) {
+    obstacles.push({ type: 'gap', x: spawnX, w: 90 });
+  } else if (r < diff.gapChance + diff.spikeChance) {
+    obstacles.push({ type: 'spike', x: spawnX, y: groundY - 22, w: 28, h: 22 });
+  } else {
+    obstacles.push({ type: 'box', x: spawnX, y: groundY - 40, w: 36, h: 40 });
+  }
+
+  if (Math.random() < diff.coinChance) {
+    const cy = groundY - 55 - Math.random() * 65;
+    coins.push({ x: spawnX + 25 + Math.random() * 50, y: cy, w: 16, h: 16, got: false, angle: 0 });
+  }
+
+  const spacing = diff.minSpacing + Math.random() * (diff.maxSpacing - diff.minSpacing);
+  spawnX += spacing;
+}
+
+function step() {
+  if (paused || over) return;
+
+  dist += speed; score += 1;
+
+  // 加速：每200分加0.25，上限12
+  if (score % 200 === 0 && speed < 12) speed += 0.25;
+  player.frame++;
+
+  player.vy += gravity;
+  player.y += player.vy;
+  if (player.y >= groundY - player.h) {
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.onGround = true;
+  } else {
+    player.onGround = false;
+  }
+
+  if (spawnX < LW + 250) spawn();
+
+  for (const o of obstacles) o.x -= speed;
+  for (const c of coins) { c.x -= speed; c.angle += 0.08; }
+  obstacles = obstacles.filter(o => o.x + (o.w || 0) > -40);
+  coins = coins.filter(c => c.x > -40);
+
+  for (const o of obstacles) {
+    if (o.type === 'gap') {
+      if (player.onGround && player.x + player.w > o.x && player.x < o.x + o.w) {
+        player.y += 7;
+        if (player.y > LH) die();
+      }
+    } else {
+      if (rectHit(player, o)) die();
+    }
+  }
+
+  for (const c of coins) {
+    if (!c.got && rectHit(player, c)) {
+      c.got = true; coinCount++; score += 50;
+      for (let i = 0; i < 8; i++) particles.push({ x: c.x + 8, y: c.y + 8, vx: (Math.random()-0.5)*4, vy: -Math.random()*3-1, life: 24, color: '#fd0' });
+    }
+  }
+  coins = coins.filter(c => !c.got);
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  for (const c of clouds) c.x -= c.sp;
+  if (clouds[0].x < -80) { clouds.push({ x: LW + 30, y: 20 + Math.random() * 80, s: clouds[0].s, sp: clouds[0].sp }); clouds.shift(); }
+
+  updateHud(); draw();
+}
+
+function rectHit(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function die() {
+  if (over) return;
+  over = true; clearInterval(timer);
+  restartBtn.style.display = 'block';
+
+  const best = getBest();
+  let isNew = false;
+  if (score > best) { setBest(score); isNew = true; }
+
+  draw();
+  ctx.fillStyle = 'rgba(0,0,0,.72)'; ctx.fillRect(0, 0, LW, LH);
+  ctx.fillStyle = '#0f0'; ctx.textAlign = 'center'; ctx.font = 'bold 32px monospace';
+  ctx.fillText('游戏结束', LW/2, LH/2 - 50);
+  ctx.font = '18px monospace';
+  ctx.fillText(`分数: ${score}`, LW/2, LH/2 - 16);
+  ctx.fillStyle = '#0a0'; ctx.font = '15px monospace';
+  ctx.fillText(`最高分: ${Math.max(best, score)}${isNew ? '  🎉新纪录!' : ''}`, LW/2, LH/2 + 10);
+  ctx.fillStyle = '#0f0'; ctx.font = '16px monospace';
+  ctx.fillText(`距离: ${Math.floor(dist/10)}m`, LW/2, LH/2 + 36);
+  ctx.fillText(`金币: ${coinCount}`, LW/2, LH/2 + 60);
+  ctx.font = '13px monospace'; ctx.fillStyle = '#060';
+  ctx.fillText('按 R 或点按钮重开', LW/2, LH/2 + 86);
+}
+
+function drawSky() {
+  const g = ctx.createLinearGradient(0, 0, 0, groundY);
+  g.addColorStop(0, '#0a0844');
+  g.addColorStop(0.4, '#1a1050');
+  g.addColorStop(0.7, '#4a1a4a');
+  g.addColorStop(1, '#c44a2a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, LW, groundY);
+
+  for (const s of stars) {
+    const a = 0.4 + Math.sin(s.tw + dist * 0.02) * 0.3;
+    ctx.fillStyle = `rgba(255,255,200,${a})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.fillStyle = '#1a0a2e';
+  for (let i = 0; i < 5; i++) {
+    const mx = ((i * 240 - dist * 0.15) % (LW + 400));
+    ctx.beginPath(); ctx.moveTo(mx, groundY); ctx.lineTo(mx + 120, groundY - 120); ctx.lineTo(mx + 240, groundY); ctx.fill();
+  }
+
+  for (const c of clouds) {
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#ff8866';
+    ctx.fillRect(c.x, c.y, 50 * c.s, 14 * c.s);
+    ctx.fillRect(c.x + 12 * c.s, c.y - 7 * c.s, 36 * c.s, 12 * c.s);
+    ctx.fillRect(c.x + 24 * c.s, c.y + 5 * c.s, 26 * c.s, 10 * c.s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawGround() {
+  const layers = [
+    { color: '#3a1a08', y: groundY, h: 16 },
+    { color: '#5a2a10', y: groundY + 16, h: 18 },
+    { color: '#7a3a18', y: groundY + 34, h: 18 },
+    { color: '#4a2510', y: groundY + 52, h: LH - groundY - 52 },
+  ];
+  for (const l of layers) { ctx.fillStyle = l.color; ctx.fillRect(0, l.y, LW, l.h); }
+  ctx.fillStyle = '#2a8a1a'; ctx.fillRect(0, groundY - 4, LW, 4);
+  ctx.fillStyle = '#1a6a10'; ctx.fillRect(0, groundY, LW, 3);
+  ctx.fillStyle = 'rgba(0,0,0,.15)';
+  for (let i = 0; i < 40; i++) { const px = (i * 67 + dist * 0.5) % LW; ctx.fillRect(px, groundY + 5 + (i % 6) * 10, 4, 2); }
+}
+
+function drawPixelPlayer(p) {
+  const runFrame = Math.floor(p.frame / 6) % 4;
+  const bobY = p.onGround ? Math.sin(p.frame * 0.5) * 2 : 0;
+  const py = p.y + bobY;
+
+  ctx.fillStyle = 'rgba(0,0,0,.25)';
+  ctx.fillRect(p.x - 3, groundY + 3, p.w + 6, 5);
+
+  ctx.fillStyle = '#1a3a8a';
+  if (p.onGround) {
+    if (runFrame === 0) { ctx.fillRect(p.x + 3, py + 28, 6, 12); ctx.fillRect(p.x + 13, py + 28, 6, 10); }
+    else if (runFrame === 1) { ctx.fillRect(p.x + 3, py + 28, 6, 9); ctx.fillRect(p.x + 13, py + 28, 6, 14); }
+    else if (runFrame === 2) { ctx.fillRect(p.x + 3, py + 28, 6, 12); ctx.fillRect(p.x + 13, py + 28, 6, 10); }
+    else { ctx.fillRect(p.x + 3, py + 28, 6, 10); ctx.fillRect(p.x + 13, py + 28, 6, 14); }
+  } else {
+    ctx.fillRect(p.x + 4, py + 28, 6, 11); ctx.fillRect(p.x + 12, py + 26, 6, 11);
+  }
+
+  ctx.fillStyle = '#2a6a2a';
+  ctx.fillRect(p.x + 3, py + 16, 16, 16);
+  ctx.fillStyle = '#3a8a3a';
+  ctx.fillRect(p.x + 5, py + 18, 12, 10);
+
+  ctx.fillStyle = '#1a3a8a';
+  if (p.onGround) {
+    if (runFrame % 2 === 0) { ctx.fillRect(p.x, py + 17, 6, 9); ctx.fillRect(p.x + 16, py + 17, 6, 9); }
+    else { ctx.fillRect(p.x + 2, py + 19, 6, 9); ctx.fillRect(p.x + 14, py + 15, 6, 9); }
+  } else {
+    ctx.fillRect(p.x + 1, py + 15, 6, 9); ctx.fillRect(p.x + 15, py + 15, 6, 9);
+  }
+
+  ctx.fillStyle = '#f0c0a0';
+  ctx.fillRect(p.x + 4, py, 14, 16);
+  ctx.fillStyle = '#3a200a';
+  ctx.fillRect(p.x + 4, py, 14, 4);
+  ctx.fillRect(p.x + 3, py + 2, 2, 6);
+  ctx.fillRect(p.x + 15, py + 2, 2, 6);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(p.x + 6, py + 7, 2, 2);
+  ctx.fillRect(p.x + 14, py + 7, 2, 2);
+  ctx.fillStyle = '#c03030';
+  if (p.onGround) ctx.fillRect(p.x + 8, py + 12, 5, 2);
+}
+
+function drawCoin(c) {
+  const pulse = 0.85 + Math.sin(c.angle * 2) * 0.15;
+  const cx = c.x + 8, cy = c.y + 8;
+  ctx.fillStyle = `rgba(255,200,0,${0.15 * pulse})`;
+  ctx.beginPath(); ctx.arc(cx, cy, 14 * pulse, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fd0';
+  ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fa0';
+  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(cx - 2, cy - 5, 4, 2);
+  ctx.fillStyle = '#c80';
+  ctx.fillRect(cx - 1, cy - 6, 2, 12);
+}
+
+function drawObstacle(o) {
+  if (o.type === 'spike') {
+    ctx.fillStyle = '#888';
+    for (let i = 0; i < 4; i++) {
+      const sx = o.x + i * 8;
+      ctx.beginPath(); ctx.moveTo(sx, o.y + o.h); ctx.lineTo(sx + 4, o.y); ctx.lineTo(sx + 8, o.y + o.h); ctx.fill();
+    }
+    ctx.fillStyle = '#aaa';
+    for (let i = 0; i < 4; i++) { const sx = o.x + i * 8; ctx.fillRect(sx + 2, o.y + o.h - 4, 4, 4); }
+  } else if (o.type === 'box') {
+    ctx.fillStyle = '#8B6914';
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+    ctx.fillStyle = '#A0821C';
+    ctx.fillRect(o.x + 3, o.y + 3, o.w - 6, o.h - 6);
+    ctx.strokeStyle = '#6B4E0E'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(o.x + 5, o.y + 10); ctx.lineTo(o.x + o.w - 5, o.y + 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o.x + 5, o.y + 20); ctx.lineTo(o.x + o.w - 5, o.y + 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o.x + 5, o.y + 30); ctx.lineTo(o.x + o.w - 5, o.y + 30); ctx.stroke();
+    ctx.fillStyle = '#444';
+    ctx.fillRect(o.x + 3, o.y + 3, 4, 4);
+    ctx.fillRect(o.x + o.w - 7, o.y + 3, 4, 4);
+    ctx.fillRect(o.x + 3, o.y + o.h - 7, 4, 4);
+    ctx.fillRect(o.x + o.w - 7, o.y + o.h - 7, 4, 4);
+  }
+}
+
+function draw() {
+  drawSky(); drawGround();
+
+  for (const o of obstacles) {
+    if (o.type === 'gap') {
+      ctx.clearRect(o.x, groundY, o.w, LH - groundY);
+      ctx.fillStyle = '#111';
+      ctx.fillRect(o.x, groundY + 10, o.w, LH - groundY - 10);
+      ctx.fillStyle = '#333';
+      ctx.fillRect(o.x, groundY, 4, 10);
+      ctx.fillRect(o.x + o.w - 4, groundY, 4, 10);
+    }
+  }
+
+  for (const c of coins) drawCoin(c);
+  for (const o of obstacles) drawObstacle(o);
+  drawPixelPlayer(player);
+
+  for (const p of particles) {
+    ctx.globalAlpha = p.life / 24;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 3, 3);
+  }
+  ctx.globalAlpha = 1;
+
+  if (paused && !over) {
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, LW, LH);
+    ctx.fillStyle = '#0f0'; ctx.textAlign = 'center'; ctx.font = 'bold 28px monospace';
+    ctx.fillText('暂停中', LW/2, LH/2);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); jump(); }
+  else if (e.code === 'KeyP') togglePause();
+  else if (e.code === 'KeyR') reset();
+});
+canvas.addEventListener('touchstart', e => { e.preventDefault(); jump(); }, { passive: false });
+canvas.addEventListener('mousedown', e => { jump(); });
+
+restartBtn.onclick = reset;
+function togglePause() { if (over) return; paused = !paused; }
+
+reset();
+</script>
+</body>
+</html>
