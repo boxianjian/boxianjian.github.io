@@ -72,7 +72,13 @@ canvas { display: none; touch-action: none; }
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 let W, H;
-function resize(){ W = cv.width = Math.min(innerWidth, 480); H = cv.height = innerHeight; }
+const MAXW = 480;
+function resize(){
+  W = cv.width = Math.min(innerWidth, MAXW);
+  H = cv.height = innerHeight;
+  cv.style.width = W + 'px';
+  cv.style.height = H + 'px';
+}
 resize();
 addEventListener('resize', resize);
 
@@ -121,7 +127,7 @@ function initStars() {
 }
 
 function makePlayer(x, color, keyMap, id) {
-  return { x, y: H-80, w: 36, h: 44, speed: 5, ammo: 30, maxAmmo: 30, cool: 0, hp: 3, invuln: 0, flash: 0, color, keys: keyMap, id, score: 0, dead: false };
+  return { x, y: H-80, w: 36, h: 44, speed: 5, ammo: 30, maxAmmo: 30, cool: 0, hp: 3, invuln: 0, flash: 0, color, keys: keyMap, id, score: 0, dead: false, reloading: false, reloadTimer: 0 };
 }
 
 function startSingle(d) {
@@ -134,7 +140,7 @@ function startSingle(d) {
   homeBtn.style.display = 'block';
   initStars();
   p1 = makePlayer(W/2-18, '#4cf', { up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',fire:'Space' }, 1);
-  p1.maxAmmo = cfg.ammo; p1.ammo = cfg.ammo; p1.cool = 0; p1.invuln = 0;
+  p1.maxAmmo = cfg.ammo; p1.ammo = cfg.ammo; p1.cool = 0; p1.invuln = 0; p1.reloading = false; p1.reloadTimer = 0;
   p2 = null;
   bullets = []; enemies = []; particles = [];
   score = 0; over = false; paused = false; multiOver = false;
@@ -153,9 +159,9 @@ function startMulti() {
   initStars();
   const hw = W / 2;
   p1 = makePlayer(hw/2-18, '#4cf', { up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',fire:'Space' }, 1);
-  p1.cool = 0; p1.invuln = 0; p1.maxAmmo = 99; p1.ammo = 99;
+  p1.cool = 0; p1.invuln = 0; p1.maxAmmo = 999; p1.ammo = 999; p1.reloading = false;
   p2 = makePlayer(hw + hw/2-18, '#f44', { up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',fire:'Enter' }, 2);
-  p2.cool = 0; p2.invuln = 0; p2.maxAmmo = 99; p2.ammo = 99;
+  p2.cool = 0; p2.invuln = 0; p2.maxAmmo = 999; p2.ammo = 999; p2.reloading = false;
   bullets = []; enemies = []; particles = [];
   over = false; paused = false; multiOver = false;
   enemyTimer = 0; keys = {}; touchActive = false;
@@ -178,7 +184,13 @@ function movePlayer(p) {
 
 function shoot(p) {
   if (!p || p.dead) return;
-  if (p.ammo <= 0) { p.cool = 30; return; }
+  if (p.reloading) return; // 换弹中，禁止射击
+  if (p.ammo <= 0) {
+    // 弹匣空了，触发换弹
+    p.reloading = true;
+    p.reloadTimer = 0;
+    return;
+  }
   if (p.cool > 0) return;
   bullets.push({ x: p.x+p.w/2-1, y: p.y, w: 2, h: 8, vy: -10, vx: 0, owner: p.id, color: p.color });
   p.ammo -= 1; p.cool = 8;
@@ -257,10 +269,17 @@ function update() {
     if (p.cool > 0) p.cool--;
     if (p.invuln > 0) p.invuln--;
     if (p.flash > 0) p.flash--;
-  });
 
-  if (p1 && !p1.dead && p1.ammo < p1.maxAmmo && enemyTimer % 60 === 0) p1.ammo++;
-  if (mode === 'multi' && p2 && !p2.dead && p2.ammo < p2.maxAmmo && enemyTimer % 60 === 0) p2.ammo++;
+    // 换弹计时（1.5秒 = 90帧）
+    if (p.reloading) {
+      p.reloadTimer++;
+      if (p.reloadTimer >= 90) {
+        p.ammo = p.maxAmmo;
+        p.reloading = false;
+        p.reloadTimer = 0;
+      }
+    }
+  });
 
   for (let i = bullets.length-1; i >= 0; i--) {
     const b = bullets[i]; b.x += b.vx; b.y += b.vy;
@@ -347,7 +366,9 @@ function draw() {
 
   if (mode === 'single') {
     let h = 'HP '; for(let i=0;i<3;i++) h += i<p1.hp?'❤️':'🖤';
-    h += '<br>弹匣 '+p1.ammo+'/'+p1.maxAmmo+'<br>分数 '+score+'<br>最高 '+(+localStorage.getItem('planeBest')||0);
+    h += '<br>弹匣 '+p1.ammo+'/'+p1.maxAmmo;
+    if (p1.reloading) h += ' <span style="color:#fc4">换弹中…</span>';
+    h += '<br>分数 '+score+'<br>最高 '+(+localStorage.getItem('planeBest')||0);
     hud.innerHTML = h;
   } else {
     let h = '<span style="color:#4cf">P1 ❤️'.repeat(p1.hp)+'🖤'.repeat(3-p1.hp)+' '+p1.score+'</span><br>';
@@ -356,32 +377,25 @@ function draw() {
   }
 }
 
-// ===== 我方飞机：流线战机（尖头朝上）=====
+// 我方飞机
 function drawPlayer(p) {
   ctx.save();
   if (p.invuln > 0 && Math.floor(p.invuln/4)%2===0) ctx.globalAlpha = 0.35;
   const cx = p.x + p.w/2;
-
-  // 尾焰
   const fl = 4 + Math.random()*5;
   const fg = ctx.createLinearGradient(cx, p.y+p.h, cx, p.y+p.h+fl+4);
-  fg.addColorStop(0, '#ff4400');
-  fg.addColorStop(1, 'rgba(255,200,0,0)');
+  fg.addColorStop(0, '#ff4400'); fg.addColorStop(1, 'rgba(255,200,0,0)');
   ctx.fillStyle = fg;
   ctx.beginPath();
   ctx.moveTo(cx - 5, p.y + p.h);
   ctx.lineTo(cx, p.y + p.h + fl + 4);
   ctx.lineTo(cx + 5, p.y + p.h);
   ctx.fill();
-
-  // 机身渐变
   const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y+p.h);
   grad.addColorStop(0, '#ffffff');
   grad.addColorStop(0.3, p.color);
   grad.addColorStop(1, '#113366');
   ctx.fillStyle = grad;
-
-  // 主机身（尖头朝上）
   ctx.beginPath();
   ctx.moveTo(cx, p.y + 2);
   ctx.lineTo(p.x + p.w - 3, p.y + p.h * 0.55);
@@ -395,122 +409,74 @@ function drawPlayer(p) {
   ctx.lineTo(p.x + 3, p.y + p.h * 0.55);
   ctx.closePath();
   ctx.fill();
-
-  // 驾驶舱
   ctx.fillStyle = 'rgba(150,220,255,.7)';
-  ctx.beginPath();
-  ctx.ellipse(cx, p.y + p.h * 0.32, 5, 7, 0, 0, 6.28);
-  ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, p.y + p.h * 0.32, 5, 7, 0, 0, 6.28); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.5)';
-  ctx.beginPath();
-  ctx.ellipse(cx - 1.5, p.y + p.h * 0.28, 2, 3, -0.3, 0, 6.28);
-  ctx.fill();
-
-  // 引擎
+  ctx.beginPath(); ctx.ellipse(cx - 1.5, p.y + p.h * 0.28, 2, 3, -0.3, 0, 6.28); ctx.fill();
   ctx.fillStyle = '#113366';
   ctx.fillRect(p.x + 1, p.y + p.h * 0.65, 5, 4);
   ctx.fillRect(p.x + p.w - 6, p.y + p.h * 0.65, 5, 4);
   ctx.fillStyle = '#4cf';
   ctx.fillRect(p.x + 2, p.y + p.h * 0.66, 3, 2);
   ctx.fillRect(p.x + p.w - 5, p.y + p.h * 0.66, 3, 2);
-
   ctx.restore();
 }
 
-// ===== 三种敌机（全部头朝玩家/朝下）=====
+// 敌机（头朝下）
 function drawEnemy(e) {
   const cx = e.x + e.w/2;
   const cy = e.y + e.h/2;
-
   switch(e.type) {
-    // 类型0：红色俯冲战机（尖头朝下！）
     case 0: {
       const grad = ctx.createLinearGradient(e.x, e.y, e.x, e.y+e.h);
-      grad.addColorStop(0, '#660000');
-      grad.addColorStop(0.5, '#cc0000');
-      grad.addColorStop(1, '#ff8888');
+      grad.addColorStop(0, '#660000'); grad.addColorStop(0.5, '#cc0000'); grad.addColorStop(1, '#ff8888');
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(cx, e.y + e.h - 2);       // 机头尖（朝下！）
-      ctx.lineTo(e.x + e.w - 3, cy + 2);   // 右翼下
-      ctx.lineTo(e.x + e.w - 1, cy - 4);   // 右翼尖
-      ctx.lineTo(cx + 5, e.y + 3);         // 右尾（顶部）
-      ctx.lineTo(cx, e.y);                 // 尾喷口（顶部）
-      ctx.lineTo(cx - 5, e.y + 3);         // 左尾
-      ctx.lineTo(e.x + 1, cy - 4);         // 左翼尖
-      ctx.lineTo(e.x + 3, cy + 2);         // 左翼下
-      ctx.closePath();
-      ctx.fill();
-      // 座舱（靠近顶部）
+      ctx.moveTo(cx, e.y + e.h - 2);
+      ctx.lineTo(e.x + e.w - 3, cy + 2);
+      ctx.lineTo(e.x + e.w - 1, cy - 4);
+      ctx.lineTo(cx + 5, e.y + 3);
+      ctx.lineTo(cx, e.y);
+      ctx.lineTo(cx - 5, e.y + 3);
+      ctx.lineTo(e.x + 1, cy - 4);
+      ctx.lineTo(e.x + 3, cy + 2);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.5)';
-      ctx.beginPath();
-      ctx.ellipse(cx, e.y + e.h * 0.55, 4, 3, 0, 0, 6.28);
-      ctx.fill();
-      // 尾焰（在顶部！）
+      ctx.beginPath(); ctx.ellipse(cx, e.y + e.h * 0.55, 4, 3, 0, 0, 6.28); ctx.fill();
       const f = 3 + Math.random()*4;
       ctx.fillStyle = '#f80';
-      ctx.beginPath();
-      ctx.moveTo(cx - 3, e.y);
-      ctx.lineTo(cx, e.y - f);
-      ctx.lineTo(cx + 3, e.y);
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx - 3, e.y); ctx.lineTo(cx, e.y - f); ctx.lineTo(cx + 3, e.y); ctx.fill();
       break;
     }
-
-    // 类型1：绿色UFO（光环朝下照）
     case 1: {
       const grad = ctx.createRadialGradient(cx, e.y+e.h-6, 1, cx, e.y+e.h-8, 10);
-      grad.addColorStop(0, '#88ff88');
-      grad.addColorStop(1, '#00aa00');
+      grad.addColorStop(0, '#88ff88'); grad.addColorStop(1, '#00aa00');
       ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.ellipse(cx, e.y + e.h - 8, 10, 6, 0, 0, 6.28);
-      ctx.fill();
-      // 底部光环（朝下）
+      ctx.beginPath(); ctx.ellipse(cx, e.y + e.h - 8, 10, 6, 0, 0, 6.28); ctx.fill();
       ctx.fillStyle = 'rgba(100,255,100,.4)';
-      ctx.beginPath();
-      ctx.ellipse(cx, e.y + e.h - 2, 12, 3, 0, 0, 6.28);
-      ctx.fill();
-      // 闪烁灯
+      ctx.beginPath(); ctx.ellipse(cx, e.y + e.h - 2, 12, 3, 0, 0, 6.28); ctx.fill();
       ctx.fillStyle = Math.floor(Date.now()/150)%2 ? '#0f0' : '#030';
       ctx.beginPath(); ctx.arc(cx - 5, e.y + e.h - 2, 1.5, 0, 6.28); ctx.fill();
       ctx.beginPath(); ctx.arc(cx + 5, e.y + e.h - 2, 1.5, 0, 6.28); ctx.fill();
       break;
     }
-
-    // 类型2：紫色导弹（尖头朝下冲下来！）
     case 2: {
       const grad = ctx.createLinearGradient(e.x, e.y, e.x+e.w, e.y);
-      grad.addColorStop(0, '#4400aa');
-      grad.addColorStop(0.5, '#aa44ff');
-      grad.addColorStop(1, '#220055');
+      grad.addColorStop(0, '#4400aa'); grad.addColorStop(0.5, '#aa44ff'); grad.addColorStop(1, '#220055');
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(cx, e.y + e.h);           // 尖头（朝下！）
-      ctx.lineTo(e.x + e.w, cy);           // 右宽
-      ctx.lineTo(cx, e.y);                 // 尾翼（朝上！）
-      ctx.lineTo(e.x, cy);                 // 左宽
-      ctx.closePath();
-      ctx.fill();
-      // 尾翼细节
+      ctx.moveTo(cx, e.y + e.h);
+      ctx.lineTo(e.x + e.w, cy);
+      ctx.lineTo(cx, e.y);
+      ctx.lineTo(e.x, cy);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = 'rgba(255,100,255,.6)';
-      ctx.beginPath();
-      ctx.moveTo(cx - 6, e.y + 2);
-      ctx.lineTo(cx + 6, e.y + 2);
-      ctx.lineTo(cx, e.y + 8);
-      ctx.closePath();
-      ctx.fill();
-      // 尾焰（在顶部！）
+      ctx.beginPath(); ctx.moveTo(cx - 6, e.y + 2); ctx.lineTo(cx + 6, e.y + 2); ctx.lineTo(cx, e.y + 8); ctx.closePath(); ctx.fill();
       const f = 5 + Math.random()*6;
       const fg = ctx.createLinearGradient(cx, e.y, cx, e.y - f - 4);
-      fg.addColorStop(0, '#ff4400');
-      fg.addColorStop(1, 'rgba(255,200,0,0)');
+      fg.addColorStop(0, '#ff4400'); fg.addColorStop(1, 'rgba(255,200,0,0)');
       ctx.fillStyle = fg;
-      ctx.beginPath();
-      ctx.moveTo(cx - 4, e.y);
-      ctx.lineTo(cx, e.y - f - 4);
-      ctx.lineTo(cx + 4, e.y);
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx - 4, e.y); ctx.lineTo(cx, e.y - f - 4); ctx.lineTo(cx + 4, e.y); ctx.fill();
       break;
     }
   }
@@ -550,9 +516,7 @@ document.addEventListener('touchmove', e => {
   shoot(p1);
 }, { passive: false });
 
-document.addEventListener('touchend', e => {
-  touchActive = false;
-}, {});
+document.addEventListener('touchend', () => { touchActive = false; }, {});
 
 showEntry();
 </script>
