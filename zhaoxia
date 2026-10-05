@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON://BREACH — 霓虹入侵</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2305070f'/%3E%3Cpolygon points='32,6 55,19.5 55,44.5 32,58 9,44.5 9,19.5' fill='none' stroke='%2300f0ff' stroke-width='4' stroke-linejoin='round'/%3E%3Cpolygon points='32,14 47,23 47,41 32,50 17,41 17,23' fill='none' stroke='%2300f0ff' stroke-width='1.5' opacity='.45'/%3E%3Ctext x='32' y='39' font-family='monospace' font-weight='bold' font-size='20' fill='%23ff2e97' text-anchor='middle'%3E%26gt;_%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2305070f'/%3E%3Cpolygon points='32,6 55,19.5 55,44.5 32,58 9,44.5 9,19.5' fill='none' stroke='%2300f0ff' stroke-width='4' stroke-linejoin='round'/%3E%3Ctext x='32' y='39' font-family='monospace' font-weight='bold' font-size='20' fill='%23ff2e97' text-anchor='middle'%3E%26gt;_%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#05070f;
+  --bg2:#0a0e1a;
+  --cyan:#00f0ff;
+  --magenta:#ff2e97;
+  --lime:#39ff14;
+  --amber:#ffb800;
+  --violet:#b026ff;
+  --red:#ff3b3b;
+  --dim:#5a6a85;
+  --panel:rgba(10,16,30,.82);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(0,240,255,.10), transparent 60%),
+    radial-gradient(900px 600px at 100% 110%, rgba(255,46,151,.12), transparent 60%),
+    var(--bg);
+  color:#dbe7ff;
+  font-family:"Share Tech Mono",ui-monospace,"SFMono-Regular",Consolas,"Microsoft YaHei",monospace;
+  overflow:hidden;
+  user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+#app{position:relative;width:100vw;height:100vh;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center}
+.screen.on{display:flex}
+.anim{animation:fadein .35s ease both}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- 通用组件 ---------- */
+.neon{ text-shadow:0 0 8px currentColor,0 0 22px currentColor; }
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 22px;border:1px solid var(--cyan);background:rgba(0,240,255,.06);
+  color:var(--cyan);font:inherit;font-size:15px;letter-spacing:2px;cursor:pointer;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  transition:.16s;
+}
+.btn:hover{background:rgba(0,240,255,.18);box-shadow:0 0 18px rgba(0,240,255,.45);transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn.mag{border-color:var(--magenta);color:var(--magenta);background:rgba(255,46,151,.06)}
+.btn.mag:hover{background:rgba(255,46,151,.18);box-shadow:0 0 18px rgba(255,46,151,.45)}
+.btn.amb{border-color:var(--amber);color:var(--amber);background:rgba(255,184,0,.07)}
+.btn.amb:hover{background:rgba(255,184,0,.18);box-shadow:0 0 18px rgba(255,184,0,.4)}
+.btn.lime{border-color:var(--lime);color:var(--lime);background:rgba(57,255,20,.06)}
+.btn.lime:hover{background:rgba(57,255,20,.18);box-shadow:0 0 18px rgba(57,255,20,.4)}
+.btn.ghost{border-color:#2c3a55;color:#7f90ad;background:transparent}
+.btn.ghost:hover{border-color:#5a6a85;color:#cfe0ff;box-shadow:none;background:rgba(255,255,255,.04)}
+.btn.sm{padding:7px 12px;font-size:12px;letter-spacing:1px}
+.btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none}
+
+.tag{font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.hint{font-size:12px;color:#6e809e;letter-spacing:1px;line-height:1.7}
+.hint b{color:var(--cyan);font-weight:400}
+
+/* ---------- 标题页 ---------- */
+#screen-title{justify-content:center;gap:0}
+.title-wrap{display:flex;flex-direction:column;align-items:center;gap:26px;padding:20px}
+.logo{font-size:clamp(44px,8vw,96px);letter-spacing:6px;line-height:1;color:var(--cyan);font-weight:700}
+.logo .sl{color:var(--dim);font-size:.42em;letter-spacing:3px}
+.logo .mg{color:var(--magenta)}
+.subtitle{font-size:clamp(14px,2vw,20px);letter-spacing:9px;color:var(--magenta)}
+.title-desc{max-width:640px;text-align:center;font-size:13px;line-height:2;color:#8fa3c4;letter-spacing:1px}
+.title-desc em{color:var(--lime);font-style:normal}
+.title-btns{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  opacity:.5;animation:scan 6s linear infinite}
+@keyframes scan{0%{top:-2%}100%{top:102%}}
+.corner{position:absolute;width:26px;height:26px;border:2px solid rgba(0,240,255,.35)}
+.corner.tl{top:18px;left:18px;border-right:0;border-bottom:0}
+.corner.tr{top:18px;right:18px;border-left:0;border-bottom:0}
+.corner.bl{bottom:18px;left:18px;border-right:0;border-top:0}
+.corner.br{bottom:18px;right:18px;border-left:0;border-top:0}
+
+/* ---------- 地图页 ---------- */
+#screen-map{justify-content:flex-start;padding:26px 16px 16px;gap:14px}
+.topbar{
+  width:min(1080px,96vw);display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 18px;background:var(--panel);border:1px solid rgba(0,240,255,.18);
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+}
+.stats{display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13px;letter-spacing:1px}
+.stat{display:flex;align-items:center;gap:7px}
+.stat .k{color:var(--dim);font-size:11px}
+.stat .v{font-size:16px}
+.hp-pips{display:flex;gap:5px}
+.pip{width:11px;height:14px;background:#1b2436;border:1px solid #34435f;transform:skewX(-12deg)}
+.pip.on{background:var(--red);border-color:#ff8080;box-shadow:0 0 10px rgba(255,59,59,.8)}
+.pip.shield{background:var(--cyan);border-color:#9ff; box-shadow:0 0 10px rgba(0,240,255,.8)}
+
+.mapbox{
+  width:min(1080px,96vw);flex:1;position:relative;overflow:auto;
+  background:linear-gradient(180deg,rgba(8,12,24,.6),rgba(5,7,15,.2));
+  border:1px solid rgba(0,240,255,.12);padding:18px;
+}
+.layers{display:flex;flex-direction:column-reverse;gap:0;min-width:760px}
+.layer{display:flex;align-items:center;gap:14px;padding:10px 0;position:relative}
+.layer-hd{width:120px;flex:none;font-size:11px;letter-spacing:2px;color:var(--dim)}
+.layer-hd .ln{font-size:19px;color:#9fb3d4;letter-spacing:1px}
+.layer-nodes{display:flex;gap:22px;flex:1;flex-wrap:wrap}
+.node{
+  width:132px;padding:12px 10px;background:rgba(12,18,32,.9);border:1px solid #263349;
+  cursor:pointer;transition:.16s;position:relative;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+}
+.node:hover{transform:translateY(-3px)}
+.node.sel{border-color:var(--lime);box-shadow:0 0 20px rgba(57,255,20,.3)}
+.node.locked{opacity:.38;cursor:not-allowed;filter:grayscale(.7)}
+.node.done{opacity:.5;cursor:default;border-color:#243044}
+.node .ico{font-size:22px;line-height:1;margin-bottom:6px}
+.node .nm{font-size:13px;letter-spacing:1px;margin-bottom:4px}
+.node .ds{font-size:10px;color:#7b8db0;line-height:1.5;letter-spacing:.5px}
+.node .rw{font-size:10px;color:var(--amber);margin-top:5px}
+.t-battle .ico{color:var(--cyan)} .t-battle .nm{color:var(--cyan)}
+.t-elite .ico{color:var(--magenta)} .t-elite .nm{color:var(--magenta)}
+.t-elite{border-color:rgba(255,46,151,.4)}
+.t-shop .ico{color:var(--amber)} .t-shop .nm{color:var(--amber)}
+.t-shop{border-color:rgba(255,184,0,.35)}
+.t-cache .ico{color:var(--lime)} .t-cache .nm{color:var(--lime)}
+.t-boss .ico{color:var(--red)} .t-boss .nm{color:var(--red)}
+.t-boss{border-color:rgba(255,59,59,.5);width:170px;box-shadow:0 0 16px rgba(255,59,59,.16)}
+.mapfoot{width:min(1080px,96vw);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.chipline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px}
+.chip{
+  padding:5px 10px;border:1px solid var(--violet);color:#d9b6ff;background:rgba(176,38,255,.1);
+  font-size:11px;letter-spacing:1px;cursor:help;
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);
+}
+.chip i{font-style:normal;color:var(--violet);margin-right:4px}
+
+/* ---------- 战斗页 ---------- */
+#screen-battle{flex-direction:row;align-items:stretch;justify-content:center;padding:0;gap:0}
+.bcol{display:flex;flex-direction:column;padding:16px 18px;gap:12px;width:270px;flex:none;
+  background:linear-gradient(180deg,rgba(8,12,24,.9),rgba(5,7,15,.95));}
+.bcol.left{border-right:1px solid rgba(0,240,255,.14)}
+.bcol.right{border-left:1px solid rgba(0,240,255,.14)}
+.bcenter{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;min-width:0}
+.panel{border:1px solid rgba(0,240,255,.16);background:rgba(10,16,30,.6);padding:12px 13px;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);}
+.ptitle{font-size:10px;letter-spacing:3px;color:var(--dim);margin-bottom:9px}
+.bar{height:14px;background:#111a2c;border:1px solid #26334a;position:relative;overflow:hidden}
+.bar > i{display:block;height:100%;width:0%;transition:width .22s ease;position:relative}
+.bar > i::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.22) 0 6px,transparent 6px 12px)}
+.bar.ram > i{background:linear-gradient(90deg,#0af,#7df);box-shadow:0 0 12px rgba(0,170,255,.7)}
+.bar.dl > i{background:linear-gradient(90deg,#0f6,#39ff14);box-shadow:0 0 12px rgba(57,255,20,.6)}
+.bar.tr > i{background:linear-gradient(90deg,#f0a,#ff2e97);box-shadow:0 0 12px rgba(255,46,151,.6)}
+.barlabel{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;letter-spacing:1px}
+.bigscore{font-size:36px;color:var(--cyan);letter-spacing:2px;line-height:1}
+.chaintxt{font-size:14px;color:var(--amber);height:20px;letter-spacing:2px}
+.skill{width:100%;text-align:left;padding:10px 12px;border:1px solid #2a3a55;background:rgba(14,20,36,.8);
+  cursor:pointer;transition:.15s;position:relative;overflow:hidden;font:inherit}
+.skill:hover:not(:disabled){border-color:var(--cyan);background:rgba(0,240,255,.1)}
+.skill:disabled{opacity:.4;cursor:not-allowed}
+.skill .sn{font-size:13px;letter-spacing:1px;color:#cfe4ff;display:flex;justify-content:space-between;align-items:center}
+.skill .sc{font-size:11px;color:var(--cyan)}
+.skill .sd{font-size:10px;color:#7089a8;margin-top:4px;line-height:1.5}
+.skill .cd{position:absolute;left:0;bottom:0;height:2px;background:var(--cyan);width:0%}
+.skill.active{border-color:var(--lime);box-shadow:0 0 14px rgba(57,255,20,.35)}
+#gridwrap{position:relative}
+#grid{display:block;cursor:pointer;border:1px solid rgba(0,240,255,.22);background:rgba(3,6,14,.75);
+  box-shadow:0 0 40px rgba(0,240,255,.08) inset,0 0 30px rgba(0,0,0,.6)}
+.bcenter .obj{font-size:12px;letter-spacing:2px;color:#8fa3c4;text-align:center}
+.bcenter .obj b{color:var(--lime)}
+.floaters{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.floater{position:absolute;font-size:18px;color:var(--amber);letter-spacing:1px;text-shadow:0 0 10px currentColor;
+  animation:floatup 1s ease-out forwards}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px) scale(.8)}18%{opacity:1;transform:translateY(-4px) scale(1.08)}
+  100%{opacity:0;transform:translateY(-46px) scale(1)}}
+.shake{animation:shk .3s}
+@keyframes shk{0%,100%{transform:none}25%{transform:translate(-5px,3px)}50%{transform:translate(4px,-3px)}75%{transform:translate(-3px,-2px)}}
+.flashred{position:absolute;inset:0;background:rgba(255,40,40,.28);pointer-events:none;opacity:0}
+.flashred.on{animation:fr .4s}
+@keyframes fr{0%{opacity:1}100%{opacity:0}}
+
+/* ---------- 商店 / 结算 ---------- */
+.wrap{width:min(940px,94vw);max-height:92vh;overflow:auto;padding:26px 26px 30px;
+  background:var(--panel);border:1px solid rgba(255,184,0,.28);position:relative;
+  clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);}
+.h2{font-size:22px;letter-spacing:5px;color:var(--amber);margin-bottom:4px}
+.shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:20px 0}
+.item{border:1px solid #2b3a55;background:rgba(12,18,32,.85);padding:14px;cursor:pointer;transition:.16s;
+  display:flex;flex-direction:column;gap:7px;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);}
+.item:hover:not(.sold):not(.cant){border-color:var(--amber);transform:translateY(-3px);box-shadow:0 0 20px rgba(255,184,0,.22)}
+.item.sold{opacity:.35;cursor:default}
+.item.cant{opacity:.5;cursor:not-allowed}
+.item .in{font-size:15px;letter-spacing:1px;color:#e6f0ff}
+.item .id{font-size:11px;color:#7b8db0;line-height:1.6}
+.item .ip{font-size:14px;color:var(--amber);margin-top:auto;letter-spacing:1px}
+.item.rare{border-color:rgba(176,38,255,.5)} .item.rare .in{color:#e0b8ff}
+.rowend{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+.resultline{font-size:14px;letter-spacing:2px;color:#9fb3d4;margin:8px 0;display:flex;justify-content:space-between;
+  border-bottom:1px dashed rgba(255,255,255,.08);padding-bottom:7px}
+.resultline b{color:var(--cyan);font-weight:400}
+.bigend{font-size:clamp(34px,6vw,64px);letter-spacing:6px;line-height:1.1}
+.logbox{max-height:190px;overflow:auto;font-size:11px;color:#7b8db0;line-height:1.9;margin-top:10px;
+  border-left:2px solid rgba(0,240,255,.3);padding-left:12px}
+.logbox div{white-space:pre-wrap}
+.logbox .g{color:var(--lime)} .logbox .r{color:var(--red)} .logbox .y{color:var(--amber)} .logbox .c{color:var(--cyan)}
+.helpgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;font-size:12px;color:#8fa3c4;line-height:1.9;margin-top:14px}
+.helpgrid b{color:var(--cyan);font-weight:400}
+.brandmark{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:4px}
+.brandmark canvas{display:block}
+.brandmark .btxt{text-align:left}
+.brandmark .bt1{font-size:clamp(30px,5.6vw,62px);letter-spacing:5px;line-height:1;font-weight:700}
+.brandmark .bt2{font-size:clamp(11px,1.5vw,15px);letter-spacing:8px;color:var(--magenta);margin-top:7px}
+.modebar{flex-basis:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;
+  padding:9px 12px;border:1px dashed rgba(176,38,255,.38);background:rgba(176,38,255,.07);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);}
+.mbtn{padding:6px 14px;font:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;
+  border:1px solid #3a4a68;background:rgba(12,18,32,.8);color:#8fa3c4;transition:.15s}
+.mbtn:hover{border-color:#b026ff;color:#d9b6ff}
+.mbtn.on{border-color:var(--violet);color:#e6ccff;background:rgba(176,38,255,.2);box-shadow:0 0 14px rgba(176,38,255,.35)}
+.mbtn.lock{opacity:.45;cursor:not-allowed}
+.mtip{font-size:11px;color:#7b8db0;letter-spacing:1px}
+.slot{font-size:11px;color:var(--violet);letter-spacing:1px;margin-left:6px}
+.mktgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px;margin:18px 0}
+.up{border:1px solid #2b3a55;background:rgba(12,18,32,.86);padding:13px 14px;cursor:pointer;transition:.16s;
+  display:flex;flex-direction:column;gap:6px;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);}
+.up:hover:not(.maxed):not(.cant){border-color:var(--violet);transform:translateY(-3px);box-shadow:0 0 20px rgba(176,38,255,.24)}
+.up.maxed{border-color:rgba(57,255,20,.5);opacity:.75;cursor:default}
+.up.cant{opacity:.5;cursor:not-allowed}
+.up .un{font-size:14px;letter-spacing:1px;color:#e6f0ff}
+.up .ud{font-size:11px;color:#7b8db0;line-height:1.6}
+.up .unx{font-size:11px;color:var(--lime);line-height:1.5}
+.up .upc{font-size:13px;color:var(--violet);margin-top:auto;letter-spacing:1px}
+.up .pips{display:flex;gap:4px;margin-top:2px}
+.up .pips i{width:16px;height:5px;background:#1b2436;border:1px solid #34435f;display:block}
+.up .pips i.on{background:var(--violet);border-color:#e0b8ff;box-shadow:0 0 8px rgba(176,38,255,.8)}
+.shardbox{display:flex;align-items:center;gap:10px;padding:11px 16px;border:1px solid rgba(176,38,255,.45);
+  background:rgba(176,38,255,.1);margin:14px 0;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);}
+.shardbox .sv{font-size:26px;color:#d9b6ff;letter-spacing:2px;text-shadow:0 0 14px rgba(176,38,255,.8)}
+.shardline{font-size:11px;color:#8fa3c4;letter-spacing:1px;line-height:1.8}
+
+/* ---------- 难度 / 公司选择 ---------- */
+.corpgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:24px 0 18px}
+.corp{border:1px solid #2b3a55;background:rgba(12,18,32,.88);padding:0;cursor:pointer;transition:.18s;
+  position:relative;overflow:hidden;text-align:left;font:inherit;color:inherit;
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);}
+.corp:hover{transform:translateY(-5px)}
+.corp .chd{padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07);position:relative}
+.corp .cno{font-size:10px;letter-spacing:4px;color:var(--dim)}
+.corp .cn{font-size:18px;letter-spacing:2px;margin-top:5px;line-height:1.3}
+.corp .cs{font-size:11px;color:#7b8db0;margin-top:4px;letter-spacing:1px}
+.corp .cbd{padding:14px 18px 18px}
+.corp .cd{font-size:12px;line-height:1.85;color:#93a6c6;min-height:76px}
+.corp .cl{font-size:11px;line-height:1.7;margin-top:12px;color:#7b8db0}
+.corp .cl b{font-weight:400}
+.difbar{display:flex;align-items:center;gap:8px;font-size:10px;color:#6e809e;margin-top:7px;letter-spacing:1px}
+.difbar .lb{width:52px;flex:none}
+.difbar .tr{flex:1;height:5px;background:#141d30;position:relative;overflow:hidden}
+.difbar .tr i{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .5s ease}
+.corp .go{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:2px}
+.corp .best{font-size:10px;color:#5a6a85;letter-spacing:1px;margin-top:8px;min-height:14px}
+.corp::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
+@media(max-width:860px){ .corpgrid{grid-template-columns:1fr} }
+@media(max-width:900px){
+  .bcol{width:200px;padding:12px}
+  .helpgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 标题 ============ -->
+  <div id="screen-title" class="screen on">
+    <div class="scanline"></div>
+    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+    <div class="title-wrap anim">
+      <div class="brandmark">
+        <canvas id="logo-canvas" width="112" height="112"></canvas>
+        <div class="btxt">
+          <div class="bt1"><span style="color:var(--cyan)">NEON</span><span style="color:#5a6a85">//</span><span style="color:var(--magenta)">BREACH</span></div>
+          <div class="bt2 neon" style="color:var(--magenta)">霓 虹 入 侵</div>
+        </div>
+      </div>
+      <div class="title-desc">
+        你是一名 <em>数据潜行者</em>。目标：挑一家公司，逐层突破它的防火墙，窃取核心数据库。<br>
+        点击 <em>3 个以上相邻的同色数据包</em> 触发编译，连锁编译会产生指数级得分。<br>
+        沿途装配 <em>芯片</em>、释放 <em>入侵技能</em>，构筑属于你的黑客流派。
+      </div>
+      <div class="title-btns">
+        <button class="btn lime" id="btn-start">▶ 开始入侵</button>
+        <button class="btn mag" id="btn-market"><span id="btn-mkt-icon" style="display:inline-flex;vertical-align:-6px;margin-right:2px"></span>黑市改装</button>
+        <button class="btn ghost" id="btn-help">? 操作说明</button>
+      </div>
+      <div class="hint" id="title-best"></div>
+    </div>
+  </div>
+
+  <!-- ============ 黑市（永久升级） ============ -->
+  <div id="screen-market" class="screen">
+    <div class="wrap anim" style="border-color:rgba(176,38,255,.4);width:min(1010px,95vw)">
+      <div class="h2 neon" style="color:var(--violet)">BLACK//MARKET 永久改装</div>
+      <div class="hint">用 <b style="color:#d9b6ff">◆ 数据碎片</b> 永久强化你的潜行装备。改装对所有难度、所有后续入侵永久生效。</div>
+      <div class="shardbox">
+        <span id="mkt-icon"></span>
+        <div>
+          <div class="sv" id="mkt-shards">0</div>
+          <div class="tag">数据碎片 SHARD</div>
+        </div>
+        <div class="shardline" id="mkt-rate" style="margin-left:auto;text-align:right"></div>
+      </div>
+      <div class="mktgrid" id="mkt-grid"></div>
+      <div class="rowend">
+        <div class="hint">碎片来源：每局结算按得分与层数折算 · 攻破核心有额外奖励</div>
+        <button class="btn mag" id="btn-mkt-back">◀ 返回标题</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 公司选择（难度） ============ -->
+  <div id="screen-diff" class="screen">
+    <div class="wrap anim" style="border-color:rgba(255,46,151,.3);max-width:1040px">
+      <div class="h2 neon" style="color:var(--magenta)">SELECT TARGET // 选择目标</div>
+      <div class="hint">三家公司，三套防火墙。安保等级依次递增 —— 选错目标，后果自负。</div>
+      <div class="corpgrid" id="corp-grid"></div>
+      <div class="rowend">
+        <div class="hint">提示：难度越高，得分倍率越高。信用点与芯片是唯一能弥补差距的东西。</div>
+        <button class="btn ghost sm" id="btn-diff-back">◀ 返回</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 地图 ============ -->
+  <div id="screen-map" class="screen">
+    <div class="topbar anim">
+      <div class="stats">
+        <div class="stat"><span class="k">系统完整度</span><span class="hp-pips" id="map-hp"></span></div>
+        <div class="stat"><span class="k">信用点</span><span class="v neon" style="color:var(--amber)" id="map-cr">0</span></div>
+        <div class="stat"><span class="k">总分</span><span class="v neon" style="color:var(--cyan)" id="map-score">0</span></div>
+        <div class="stat"><span class="k">进度</span><span class="v" id="map-layer" style="color:#9fb3d4">1 / 5</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="tag" id="map-corp" style="letter-spacing:2px"></div>
+        <div class="tag" id="map-code">SESSION://--------</div>
+      </div>
+    </div>
+    <div class="mapbox anim"><div class="layers" id="layers"></div></div>
+    <div class="mapfoot">
+      <div class="chipline"><span class="tag">已装配芯片：</span><span id="map-chips"></span></div>
+      <button class="btn sm ghost" id="btn-help2">? 说明</button>
+    </div>
+  </div>
+
+  <!-- ============ 战斗 ============ -->
+  <div id="screen-battle" class="screen">
+    <div class="bcol left">
+      <div class="panel">
+        <div class="ptitle">SESSION 状态</div>
+        <div style="font-size:11px;letter-spacing:2px;color:#7f90ad;margin-bottom:6px" id="b-node">节点</div>
+        <div class="barlabel"><span>系统完整度</span><span id="b-hp" style="color:var(--red)">3/3</span></div>
+        <div class="hp-pips" id="b-pips" style="margin-bottom:12px"></div>
+        <div class="barlabel"><span>下载进度</span><span id="b-dl" style="color:var(--lime)">0%</span></div>
+        <div class="bar dl"><i id="b-dlbar"></i></div>
+        <div class="barlabel" style="margin-top:10px"><span>追踪度 TRACE</span><span id="b-tr" style="color:var(--magenta)">0%</span></div>
+        <div class="bar tr"><i id="b-trbar"></i></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">得分</div>
+        <div class="bigscore neon" id="b-score">0</div>
+        <div class="chaintxt neon" id="b-chain" style="color:var(--amber)"></div>
+      </div>
+      <div class="panel" style="margin-top:auto">
+        <div class="ptitle">图例</div>
+        <div class="hint" style="font-size:11px;line-height:1.9">
+          <b>◆</b> 数据包 · 点击 3+ 相邻同色消除<br>
+          <b style="color:var(--amber)">◎</b> 核心数据 · 消除 +8 进度<br>
+          <b style="color:var(--lime)">▣</b> 加密块 · 需消除 2 次<br>
+          <b style="color:var(--red)">✖</b> 病毒 · 由相邻消除清除<br>
+        </div>
+      </div>
+    </div>
+
+    <div class="bcenter">
+      <div class="obj anim" id="b-obj">目标</div>
+      <div id="gridwrap">
+        <canvas id="grid"></canvas>
+        <div class="floaters" id="floaters"></div>
+        <div class="flashred" id="flashred"></div>
+      </div>
+      <div class="hint" id="b-tip" style="height:18px"></div>
+    </div>
+
+    <div class="bcol right">
+      <div class="panel">
+        <div class="ptitle">内存 RAM</div>
+        <div class="bar ram"><i id="b-rambar"></i></div>
+        <div style="font-size:11px;color:#7b8db0;margin-top:6px;letter-spacing:1px" id="b-ramtxt">0 / 100</div>
+      </div>
+      <div class="panel" style="flex:1">
+        <div class="ptitle">入侵技能</div>
+        <div style="display:flex;flex-direction:column;gap:9px" id="skills"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">芯片</div>
+        <div class="chipline" id="b-chips" style="font-size:10px"></div>
+      </div>
+      <button class="btn sm ghost" id="btn-flee">放弃该节点（撤退）</button>
+    </div>
+  </div>
+
+  <!-- ============ 商店 ============ -->
+  <div id="screen-shop" class="screen">
+    <div class="wrap anim">
+      <div class="h2 neon" style="color:var(--amber)">BLACK//MARKET 黑市终端</div>
+      <div class="hint">信用点是唯一的硬通货。售出即装配，无法退货。</div>
+      <div class="shopgrid" id="shop-items"></div>
+      <div class="rowend">
+        <div class="stats">
+          <div class="stat"><span class="k">信用点</span><span class="v neon" style="color:var(--amber)" id="shop-cr">0</span></div>
+          <div class="stat"><span class="k">完整度</span><span class="v" id="shop-hp" style="color:var(--red)"></span></div>
+          <div class="stat"><span class="k">芯片槽</span><span class="v slot" id="shop-slot"></span></div>
+        </div>
+        <button class="btn lime" id="btn-shop-leave">断开连接 ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 结算 ============ -->
+  <div id="screen-end" class="screen">
+    <div class="wrap anim" style="border-color:rgba(0,240,255,.3);text-align:center">
+      <div class="bigend neon" id="end-title">BREACH COMPLETE</div>
+      <div class="hint" id="end-sub" style="margin-top:6px"></div>
+      <div style="margin-top:22px;text-align:left" id="end-stats"></div>
+      <div class="rowend" style="justify-content:center;margin-top:22px">
+        <button class="btn" id="btn-again">↻ 再次入侵</button>
+        <button class="btn ghost" id="btn-title">返回标题</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 帮助 ============ -->
+  <div id="screen-help" class="screen">
+    <div class="wrap anim" style="border-color:rgba(0,240,255,.3)">
+      <div class="h2 neon">操作手册 // MANUAL</div>
+      <div class="helpgrid">
+        <div><b>核心操作</b><br>左键点击 3 个以上<b>相邻同色</b>数据包即可编译（消除）。组越大，得分越高（数量²）。</div>
+        <div><b>编译链 CHAIN</b><br>消除后数据塌落，若自动形成 <b>4 个以上</b>同色连通块，会触发自动连锁，倍率 ×1.5 / ×2 / ×2.5…</div>
+        <div><b>核心数据 ◎</b><br>金色环的数据包，消除后立即 +8 下载进度，是推进关卡的关键。</div>
+        <div><b>病毒 ✖</b><br>无法直接点击。当<b>相邻</b>数据包被编译时被清除（2 次）。病毒会自我复制扩散。</div>
+        <div><b>加密块 ▣</b><br>需要编译 2 次才会消失，第一次只解除外层加密。</div>
+        <div><b>追踪度 TRACE</b><br>持续上升，满格会被 ICE 反制：损失 1 点完整度并注入病毒。编译可压制追踪度。</div>
+        <div><b>溢出伤害</b><br>数据从顶部持续涌入，某列堆满继续涌入会<b>溢出</b>，损失完整度。优先清理高列。</div>
+        <div><b>技能与芯片</b><br>技能消耗 RAM（自动回复）。芯片为永久被动，可在黑市装配，最多 6 枚。</div>
+        <div><b>快捷键</b><br><b>1 / 2 / 3 / 4</b> 释放技能 · <b>Esc</b> 撤退 · <b>H</b> 提示</div>
+        <div><b>本层推进</b><br>必须攻破本层<b>全部节点</b>才能深入下一层；每清完一层回 1 点完整度并拿层奖励。</div>
+        <div><b>◈ 深层扫描（可选）</b><br>在本层模式条切换。激活后：追踪度 <b>×1.35</b>、涌入 <b>×0.75</b>、宽限期 <b>−40%</b>，但信用点 <b>×1.5</b>，且清完本层 <b>芯片槽 +1</b>。</div>
+        <div><b>芯片槽</b><br>初始 6 槽，可装配芯片数上限；深层扫描与黑市改装是扩容方式。</div>
+        <div><b>◆ 数据碎片</b><br>跨局永久货币，结算按得分与层数发放。标题页进<b>黑市</b>可永久升级完整度、RAM、信用点、芯片槽，以及强化/解锁技能（GHOST、CASCADE）。</div>
+      </div>
+      <div class="rowend" style="justify-content:center;margin-top:20px">
+        <button class="btn" id="btn-help-close">明白了</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+/* =========================================================
+   NEON://BREACH — 霓虹入侵
+   单文件 Roguelite 连锁消除
+   ========================================================= */
+"use strict";
+
+/* ---------- 常量 ---------- */
+const COLS = 7, ROWS = 8, CELL = 62, PAD = 6;
+const CW = COLS * CELL, CH = ROWS * CELL;
+
+const COLORS = [
+  { id:0, name:"CYAN",    hex:"#00f0ff", shape:"square"   },
+  { id:1, name:"MAGENTA", hex:"#ff2e97", shape:"circle"   },
+  { id:2, name:"LIME",    hex:"#39ff14", shape:"triangle" },
+  { id:3, name:"AMBER",   hex:"#ffb800", shape:"diamond"  },
+  { id:4, name:"VIOLET",  hex:"#b026ff", shape:"hexagon"  },
+  { id:5, name:"CRIMSON", hex:"#ff3b3b", shape:"star"     }
+];
+
+/* 芯片池 */
+const CHIPS = [
+  { id:"cache",   name:"缓存优化",   rare:0, desc:"每个数据包基础分 +2",             apply:r=>r.mods.scorePer+=2 },
+  { id:"thread",  name:"并行线程",   rare:1, desc:"连锁倍率成长 +0.4",               apply:r=>r.mods.chainGrow+=0.4 },
+  { id:"firewall",name:"冰墙固件",   rare:0, desc:"数据涌入间隔 +0.35 秒",           apply:r=>r.mods.genBonus+=0.35 },
+  { id:"compress",name:"数据压缩",   rare:1, desc:"每编译 40 个数据包，自动清理底部一行", apply:r=>r.mods.compress+=40 },
+  { id:"neuro",   name:"神经加速",   rare:0, desc:"RAM 回复 +1.6 / 秒",              apply:r=>r.mods.ramRegen+=1.6 },
+  { id:"backup",  name:"冗余备份",   rare:1, desc:"完整度上限 +1，并立即修复 1 点",   apply:r=>{r.maxHp+=1;r.hp=Math.min(r.maxHp,r.hp+1);} },
+  { id:"sniffer", name:"核心嗅探",   rare:1, desc:"核心数据出现率翻倍，+4 额外进度",  apply:r=>{r.mods.coreRate*=2;r.mods.coreBonus+=4;} },
+  { id:"shield",  name:"溢出护盾",   rare:2, desc:"每层首次溢出不损失完整度",         apply:r=>r.mods.shield+=1 },
+  { id:"overclock",name:"超频核心",  rare:2, desc:"OVERCLOCK 持续时间 +4 秒，效果 ×1.5",apply:r=>r.mods.ocBoost+=1 },
+  { id:"analyzer",name:"预读分析器", rare:1, desc:"编译 5 个以上时，额外 +12 分",      apply:r=>r.mods.bigBonus+=12 },
+  { id:"purger",  name:"深度清理",   rare:2, desc:"PURGE 额外清理一行，并额外回复 15 RAM", apply:r=>r.mods.purgeBoost+=1 },
+  { id:"leech",   name:"信用吸血",   rare:1, desc:"每关结算信用点 +12",               apply:r=>r.mods.leech+=12 }
+];
+
+/* 技能 */
+const SKILLS = [
+  { id:"ping",   name:"PING 扫描",   cost:28, desc:"清除全部病毒并净化其所在区块" },
+  { id:"oc",     name:"OVERCLOCK 超频", cost:42, desc:"8 秒内得分 ×2，涌入减速" },
+  { id:"purge",  name:"PURGE 清道夫", cost:50, desc:"强制清理底部 2 行，计入进度" },
+  { id:"rollb",  name:"ROLLBACK 回滚", cost:34, desc:"清除顶部 2 行，缓解溢出压力" }
+];
+
+/* 进阶技能（黑市解锁） */
+const SKILLS_EXTRA = [
+  { id:"ghost",   name:"GHOST 幽灵协议", cost:45, desc:"追踪度冻结数秒，期间完全不被追踪" },
+  { id:"cascade", name:"CASCADE 级联注入", cost:58, desc:"将底部若干行同化为同一颜色，制造巨型连锁" }
+];
+const ALL_SKILLS = SKILLS.concat(SKILLS_EXTRA);
+
+/* ---------- 元进度：◆ 数据碎片 + 黑市永久升级 ---------- */
+const META_KEY = "neonbreach_meta_v1";
+function defaultMeta(){ return { shards:0, lv:{}, runs:0 }; }
+function loadMeta(){
+  try{
+    const m = JSON.parse(localStorage.getItem(META_KEY)||"{}");
+    return { shards:m.shards||0, lv:m.lv||{}, runs:m.runs||0 };
+  }catch(e){ return defaultMeta(); }
+}
+function saveMeta(m){ try{ localStorage.setItem(META_KEY, JSON.stringify(m)); }catch(e){} }
+function metaLv(id){ const m = loadMeta(); return m.lv[id]||0; }
+
+const UPGRADES = [
+  { id:"hp",    name:"系统冗余",   max:3, cost:lv=>70+lv*80,
+    desc:lv=>`起始完整度 +${lv}`, next:lv=>`→ 起始完整度 +${lv+1}` },
+  { id:"ram",   name:"内存总线",   max:3, cost:lv=>55+lv*60,
+    desc:lv=>`起始 RAM 上限 +${lv*20}`, next:lv=>`→ RAM 上限 +${(lv+1)*20}` },
+  { id:"cred",  name:"启动资金",   max:3, cost:lv=>50+lv*55,
+    desc:lv=>`起始信用点 +${lv*20}`, next:lv=>`→ 起始信用点 +${(lv+1)*20}` },
+  { id:"slot",  name:"芯片预槽",   max:2, cost:lv=>140+lv*160,
+    desc:lv=>`初始芯片槽 +${lv}`, next:lv=>`→ 初始芯片槽 +${lv+1}` },
+  { id:"sk_ping",   name:"PING 强化",   max:3, cost:lv=>45+lv*50,
+    desc:lv=>`消耗 −${lv*6} · 净化回复 ${lv*5} RAM`, next:lv=>`→ 消耗 −${(lv+1)*6}` },
+  { id:"sk_oc",     name:"OVERCLOCK 强化", max:3, cost:lv=>45+lv*50,
+    desc:lv=>`消耗 −${lv*6} · 持续 +${lv*2} 秒`, next:lv=>`→ 持续 +${(lv+1)*2} 秒` },
+  { id:"sk_purge",  name:"PURGE 强化",  max:3, cost:lv=>50+lv*55,
+    desc:lv=>`消耗 −${lv*6} · 多清 ${lv} 行`, next:lv=>`→ 多清 ${lv+1} 行` },
+  { id:"sk_rollb",  name:"ROLLBACK 强化", max:3, cost:lv=>45+lv*50,
+    desc:lv=>`消耗 −${lv*6} · 多清 ${lv} 行`, next:lv=>`→ 多清 ${lv+1} 行` },
+  { id:"un_ghost",   name:"解锁 GHOST 幽灵协议", max:1, cost:()=>180,
+    desc:lv=>lv?"已解锁：追踪度冻结":"第 5 个技能 · 冻结追踪度", next:()=>"→ 获得 GHOST 幽灵协议" },
+  { id:"un_cascade", name:"解锁 CASCADE 级联注入", max:1, cost:()=>240,
+    desc:lv=>lv?"已解锁：底部行同化":"第 6 个技能 · 制造巨型连锁", next:()=>"→ 获得 CASCADE 级联注入" }
+];
+
+/* ---------- 全局状态 ---------- */
+let S = null;          // run 状态
+let B = null;          // battle 状态
+let prevScreen = "title";
+const $ = id => document.getElementById(id);
+
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function ri(a,b){ return Math.floor(rnd(a,b+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+/* ---------- 存档 ---------- */
+function bestKey(di){ return "neonbreach_best_" + (di===undefined?1:di); }
+function loadBest(di){
+  try{ return JSON.parse(localStorage.getItem(bestKey(di))||"{}"); }catch(e){ return {}; }
+}
+function saveBest(o, di){ try{ localStorage.setItem(bestKey(di), JSON.stringify(o)); }catch(e){} }
+function allBest(){ return DIFFS.map(d=>loadBest(d.id)); }
+
+/* =========================================================
+   难度 = 三家公司（安保等级递增）
+   ========================================================= */
+const CORP_ICON = {
+  0:`<svg viewBox="0 0 40 40" width="38" height="38"><circle cx="20" cy="20" r="15" fill="none" stroke="#39ff14" stroke-width="2.5" opacity=".85"/><circle cx="20" cy="20" r="7" fill="none" stroke="#39ff14" stroke-width="2"/><circle cx="14" cy="13" r="2" fill="#ff2e97"/><circle cx="27" cy="15" r="1.8" fill="#00f0ff"/><circle cx="15" cy="27" r="1.8" fill="#ffb800"/><circle cx="26" cy="26" r="2" fill="#b026ff"/></svg>`,
+  1:`<svg viewBox="0 0 40 40" width="38" height="38"><circle cx="20" cy="20" r="15" fill="none" stroke="#00f0ff" stroke-width="2.5" opacity=".85"/><path d="M20 7 L20 33 M7 20 L33 20" stroke="#00f0ff" stroke-width="3.5" stroke-linecap="round"/><circle cx="20" cy="20" r="4" fill="#ff2e97"/></svg>`,
+  2:`<svg viewBox="0 0 40 40" width="38" height="38"><path d="M20 4 L34 12 L34 28 L20 36 L6 28 L6 12 Z" fill="none" stroke="#ff3b3b" stroke-width="2.5"/><path d="M20 11 L28 15.5 L28 24.5 L20 29 L12 24.5 L12 15.5 Z" fill="none" stroke="#ff3b3b" stroke-width="1.6" opacity=".55"/><path d="M14 22 L20 14 L26 22" fill="none" stroke="#b026ff" stroke-width="2.4" stroke-linecap="round"/></svg>`
+};
+const MARKET_ICON = `<svg viewBox="0 0 40 40" width="34" height="34"><path d="M20 4 L33 11.5 L33 28.5 L20 36 L7 28.5 L7 11.5 Z" fill="none" stroke="#b026ff" stroke-width="2.4"/><rect x="15" y="15" width="10" height="10" fill="none" stroke="#d9b6ff" stroke-width="2"/><path d="M15 11 V8 M20 11 V8 M25 11 V8 M15 32 V35 M20 32 V35 M25 32 V35 M11 15 H8 M11 20 H8 M11 25 H8 M32 15 H35 M32 20 H35 M32 25 H35" stroke="#b026ff" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const SHARD_ICON = `<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2 L21 12 L12 22 L3 12 Z" fill="rgba(176,38,255,.28)" stroke="#b026ff" stroke-width="2"/><path d="M12 6 L17 12 L12 18 L7 12 Z" fill="#d9b6ff" opacity=".65"/></svg>`;
+
+const DIFFS = [
+  {
+    id:0, key:"donut", name:"MR.DONUT", full:"MR.DONUT 甜甜圈连锁",
+    sub:"TARGET 01 · 街角连锁便利店", grade:"安保等级 D — 新手友好",
+    color:"#39ff14", accent:"#7dffb0",
+    desc:"第三代白牌防火墙，二手货，最后一次固件更新停在七年前。<br>安全主管是一台落灰的台式机，密码贴在显示器上。",
+    layers:4, hp:5, credits:55, grace:13,
+    targetMul:0.70, genAdd:0.60, virusMul:0.30, traceMul:0.55,
+    coreMul:1.40, rewMul:1.00, priceMul:0.85, scoreMul:0.70,
+    bossTarget:150, bossStages:2, genCount:2,
+    layerNames:["外层网关","认证层","数据井","核心数据库"]
+  },
+  {
+    id:1, key:"helix", name:"HELIX 生化", full:"HELIX 生化医疗",
+    sub:"TARGET 02 · 中型医药企业", grade:"安保等级 B — 标准合约",
+    color:"#00f0ff", accent:"#ff2e97",
+    desc:"正经的蓝队，三班倒，真有人盯着告警看。<br>追踪程序写得不错，但预算卡得死，硬件还是上两代的。",
+    layers:5, hp:4, credits:45, grace:9,
+    targetMul:1.00, genAdd:0.00, virusMul:1.00, traceMul:1.00,
+    coreMul:1.00, rewMul:1.00, priceMul:1.00, scoreMul:1.00,
+    bossTarget:200, bossStages:3, genCount:2,
+    layerNames:["外层网关","认证层","数据井","内环堡垒","核心数据库"]
+  },
+  {
+    id:2, key:"zaibatsu", name:"天穹重工", full:"ZAIBATSU 天穹重工",
+    sub:"TARGET 03 · 巨型财阀", grade:"安保等级 S — 有去无回",
+    color:"#ff3b3b", accent:"#b026ff",
+    desc:"军用级黑冰，自建内核，检测到入侵直接反向追踪。<br>上一个接这单的潜行者，至今挂在他们的通缉栏上。",
+    layers:6, hp:3, credits:38, grace:6,
+    targetMul:1.32, genAdd:-0.42, virusMul:1.75, traceMul:1.55,
+    coreMul:0.80, rewMul:1.35, priceMul:1.25, scoreMul:1.60,
+    bossTarget:250, bossStages:3, genCount:3,
+    layerNames:["外层网关","认证层","数据井","内环堡垒","黑箱机房","核心数据库"]
+  }
+];
+let DIFF = DIFFS[1];   // 当前难度（默认普通）
+
+/* =========================================================
+   地图生成
+   ========================================================= */
+const NODE_TYPES = {
+  battle:{ ico:"◆", nm:"数据节点", cls:"t-battle" },
+  elite: { ico:"☠", nm:"精英守卫", cls:"t-elite"  },
+  shop:  { ico:"⌬", nm:"黑市终端", cls:"t-shop"   },
+  cache: { ico:"⬢", nm:"缓存仓库", cls:"t-cache"  },
+  boss:  { ico:"◈", nm:"核心防火墙", cls:"t-boss" }
+};
+
+function genMap(){
+  const D = DIFF, total = D.layers, layers = [];
+  for(let L=0; L<total; L++){
+    const nodes = [];
+    if(L===total-1){
+      nodes.push(makeNode("boss", L));
+    }else{
+      const n = L===0 ? 2 : ri(2,3);
+      const pool = L===0 ? ["battle","battle"] : [];
+      for(let i=0;i<n;i++){
+        let t;
+        if(pool.length) t = pool.pop();
+        else{
+          const r = Math.random();
+          if(L>=2 && i===0 && Math.random()<0.4) t = "shop";
+          else if(r<0.12) t = "shop";
+          else if(r<0.26) t = "elite";
+          else if(r<0.40) t = "cache";
+          else t = "battle";
+        }
+        nodes.push(makeNode(t, L));
+      }
+    }
+    layers.push({ idx:L, nodes, chosen:-1 });
+  }
+  return layers;
+}
+function makeNode(type, L){
+  const D = DIFF, total = D.layers;
+  const isBoss = type==="boss";
+  const isElite = type==="elite";
+  const prog = L / Math.max(1, total-1);          // 层进度 0→1，用于层内递增
+  return {
+    type, layer:L, done:false,
+    target: isBoss ? D.bossTarget
+                   : Math.max(20, Math.round((40 + L*9) * D.targetMul * (isElite?1.40:1))),
+    gen: isBoss ? Math.max(0.8, 1.45 + D.genAdd*0.5)
+                : clamp(2.55 - prog*0.95 + D.genAdd - (isElite?0.32:0), 0.62, 4),
+    virus: isBoss ? 0.10*D.virusMul
+                  : (0.048 + prog*0.055 + (isElite?0.042:0)) * D.virusMul,
+    core: isBoss ? 0.10 : 0.055*D.coreMul,
+    rew: Math.round((isBoss ? 130 : (isElite ? 58+L*10 : 26+L*8)) * D.rewMul),
+    shop: null
+  };
+}
+
+/* =========================================================
+   Run 初始化
+   ========================================================= */
+const BASE_MODS = ()=>({ scorePer:8, chainGrow:0.5, genBonus:0, compress:0, ramRegen:4,
+  coreRate:1, coreBonus:0, shield:0, ocBoost:0, bigBonus:0, purgeBoost:0, leech:0 });
+
+function buildSkills(){
+  const out = [];
+  ALL_SKILLS.forEach(sk=>{
+    if(sk.id==="ghost"   && metaLv("un_ghost")<1) return;
+    if(sk.id==="cascade" && metaLv("un_cascade")<1) return;
+    const lv = metaLv("sk_"+sk.id);
+    out.push({ ...sk, lv, cur: Math.max(12, sk.cost - lv*6) });
+  });
+  return out;
+}
+
+function newRun(di){
+  if(di===undefined) di = (DIFF ? DIFF.id : 1);
+  DIFF = DIFFS[di];
+  const D = DIFF;
+  const mHp   = metaLv("hp"), mRam = metaLv("ram"),
+        mCred = metaLv("cred"), mSlot = metaLv("slot");
+  S = {
+    diff:D, diffId:di,
+    hp:D.hp+mHp, maxHp:D.hp+mHp, baseMaxHp:D.hp+mHp, credits:D.credits+mCred*20, score:0, rawScore:0,
+    layer:0, map:genMap(),
+    chips:[], ram:100+mRam*20, maxRam:100+mRam*20, chipSlots:6+mSlot,
+    deepMode:false, deepLocked:false, deepCleared:0,
+    mods:BASE_MODS(),
+    skills: buildSkills(),
+    cleared:0, nodesDone:0, shieldLeft:0,
+    code:"SESSION://"+Math.random().toString(36).slice(2,10).toUpperCase(),
+    log:[], startTime:Date.now()
+  };
+  logm("· 会话建立 "+S.code, "c");
+  logm("· 目标："+D.full+" / "+D.layers+" 层 · "+D.grade, "c");
+  if(mHp||mRam||mCred||mSlot){
+    logm("· 黑市改装生效：完整度+"+mHp+" RAM+"+mRam*20+" 信用点+"+mCred*20+" 芯片槽+"+mSlot, "g");
+  }
+}
+
+function logm(t, c){ if(S) S.log.push({t, c:c||""}); }
+function addScore(n){ if(!S) return; S.rawScore += n; S.score = Math.round(S.rawScore * DIFF.scoreMul); }
+
+/* 应用所有芯片（重算 mods） */
+function recalcMods(){
+  S.mods = BASE_MODS();
+  S.maxHp = S.baseMaxHp || 3;
+  S.chips.forEach(id=>{
+    const c = CHIPS.find(x=>x.id===id);
+    if(c) c.apply(S);
+  });
+  S.hp = Math.min(S.hp, S.maxHp);
+}
+
+/* =========================================================
+   界面切换
+   ========================================================= */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  const el = $("screen-"+id);
+  el.classList.add("on");
+  // 重新触发入场动画
+  el.querySelectorAll(".anim").forEach(a=>{ a.style.animation="none"; void a.offsetWidth; a.style.animation=""; });
+}
+
+/* =========================================================
+   品牌 LOGO（Canvas 绘制 + 动画）
+   ========================================================= */
+function drawLogo(t){
+  const cv = $("logo-canvas");
+  if(!cv) return;
+  const g = cv.getContext("2d");
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const W = 112, H = 112;
+  if(cv.width !== W*dpr){ cv.width = W*dpr; cv.height = H*dpr; cv.style.width=W+"px"; cv.style.height=H+"px"; }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+
+  // 外六边形（缓慢摆动）
+  g.save();
+  g.translate(cx, cy);
+  g.rotate(Math.sin(t/2600)*0.06);
+  g.strokeStyle = "#00f0ff";
+  g.shadowColor = "#00f0ff";
+  g.shadowBlur = 20;
+  g.lineWidth = 4.5;
+  g.lineJoin = "round";
+  const R = 48;
+  g.beginPath();
+  for(let i=0;i<6;i++){
+    const a = Math.PI/6 + i*Math.PI/3;
+    const px = Math.cos(a)*R, py = Math.sin(a)*R;
+    i===0 ? g.moveTo(px,py) : g.lineTo(px,py);
+  }
+  g.closePath(); g.stroke();
+
+  // 内六边形（反向摆动，虚线）
+  g.shadowBlur = 8;
+  g.lineWidth = 1.6;
+  g.strokeStyle = "rgba(0,240,255,.42)";
+  g.rotate(-Math.sin(t/1900)*0.16);
+  const R2 = 36;
+  g.setLineDash([5,4]);
+  g.beginPath();
+  for(let i=0;i<6;i++){
+    const a = Math.PI/6 + i*Math.PI/3;
+    const px = Math.cos(a)*R2, py = Math.sin(a)*R2;
+    i===0 ? g.moveTo(px,py) : g.lineTo(px,py);
+  }
+  g.closePath(); g.stroke();
+  g.setLineDash([]);
+  g.restore();
+
+  // 扫描线（裁在六边形内，上下循环）
+  g.save();
+  g.translate(cx, cy);
+  g.beginPath();
+  for(let i=0;i<6;i++){
+    const a = Math.PI/6 + i*Math.PI/3;
+    const px = Math.cos(a)*R, py = Math.sin(a)*R;
+    i===0 ? g.moveTo(px,py) : g.lineTo(px,py);
+  }
+  g.closePath(); g.clip();
+  const sy = ((t/22) % (R*2)) - R;
+  const grd = g.createLinearGradient(0, sy-16, 0, sy+16);
+  grd.addColorStop(0,"rgba(0,240,255,0)");
+  grd.addColorStop(.5,"rgba(0,240,255,.20)");
+  grd.addColorStop(1,"rgba(0,240,255,0)");
+  g.fillStyle = grd;
+  g.fillRect(-R, sy-16, R*2, 32);
+  g.restore();
+
+  // 中心 >_（光标闪烁）
+  g.save();
+  g.translate(cx, cy);
+  g.shadowColor = "#ff2e97";
+  g.shadowBlur = 16;
+  g.fillStyle = "#ff2e97";
+  g.font = "bold 32px ui-monospace, Consolas, monospace";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  const blink = (Math.floor(t/520) % 2) === 0;
+  g.fillText(blink ? ">_" : "> ", 1, 2);
+  g.restore();
+}
+function logoLoop(){
+  requestAnimationFrame(logoLoop);
+  if($("screen-title").classList.contains("on")) drawLogo(performance.now());
+}
+requestAnimationFrame(logoLoop);
+
+/* =========================================================
+   标题页
+   ========================================================= */
+function renderTitle(){
+  const bs = allBest();
+  $("title-best").innerHTML = DIFFS.map((d,i)=>{
+    const b = bs[i];
+    const v = b.score
+      ? `<b style="color:${d.color}">${b.score.toLocaleString()}</b>${b.win?" ★":""}`
+      : `<span style="color:#4d5c78">——</span>`;
+    return `<span style="margin:0 10px">${d.name} <span style="color:#4d5c78">|</span> ${v}</span>`;
+  }).join("");
+}
+
+/* ---------- 黑市：永久改装 ---------- */
+function shardGain(win){
+  const base = Math.floor(S.rawScore / 400);
+  const depth = S.layer * 4;
+  const clear = win ? 20 : 0;
+  const diffBonus = Math.round(S.diff.scoreMul * 8);
+  return Math.max(1, base + depth + clear + diffBonus);
+}
+function renderMarket(){
+  const m = loadMeta();
+  const ic = $("mkt-icon"); if(ic) ic.innerHTML = SHARD_ICON;
+  $("mkt-shards").textContent = m.shards.toLocaleString();
+  $("mkt-rate").innerHTML = `已入侵 <b style="color:#d9b6ff">${m.runs}</b> 次 · 结算公式：得分/400 + 层数×4 + 通关 20`;
+  const g = $("mkt-grid");
+  g.innerHTML = "";
+  UPGRADES.forEach(u=>{
+    const lv = m.lv[u.id]||0;
+    const maxed = lv >= u.max;
+    const price = maxed ? 0 : u.cost(lv);
+    const cant = !maxed && m.shards < price;
+    const el = document.createElement("div");
+    el.className = "up" + (maxed?" maxed":"") + (!maxed && cant?" cant":"");
+    let pips = "";
+    for(let i=0;i<u.max;i++) pips += `<i class="${i<lv?"on":""}"></i>`;
+    el.innerHTML = `<div class="un">${u.name}</div>
+      <div class="ud">${u.desc(lv)}</div>
+      ${maxed?`<div class="unx">✓ 已满级</div>`:`<div class="unx">${u.next(lv)}</div>`}
+      <div class="pips">${pips}</div>
+      <div class="upc">${maxed?"——":"◆ "+price}</div>`;
+    if(!maxed && !cant) el.onclick = ()=> buyUpgrade(u);
+    g.appendChild(el);
+  });
+}
+function buyUpgrade(u){
+  const m = loadMeta();
+  const lv = m.lv[u.id]||0;
+  if(lv >= u.max) return;
+  const price = u.cost(lv);
+  if(m.shards < price) return;
+  m.shards -= price;
+  m.lv[u.id] = lv + 1;
+  saveMeta(m);
+  renderMarket();
+}
+
+/* ---------- 公司选择页 ---------- */
+function renderDiff(){
+  const bs = allBest();
+  const g = $("corp-grid");
+  g.innerHTML = "";
+  DIFFS.forEach((d,i)=>{
+    const b = bs[i];
+    const el = document.createElement("button");
+    el.className = "corp";
+    el.style.borderColor = d.color + "66";
+    el.onmouseenter = ()=>{ el.style.borderColor = d.color; el.style.boxShadow = "0 0 26px "+d.color+"44"; };
+    el.onmouseleave = ()=>{ el.style.borderColor = d.color+"66"; el.style.boxShadow = "none"; };
+    const bar = (label, v, col)=>
+      `<div class="difbar"><span class="lb">${label}</span><span class="tr"><i data-w="${Math.round(v*100)}" style="background:${col};box-shadow:0 0 8px ${col}"></i></span></div>`;
+    el.innerHTML = `
+      <div class="chd">
+        <div style="position:absolute;top:14px;right:16px">${CORP_ICON[d.id]}</div>
+        <div class="cno">TARGET 0${i+1}</div>
+        <div class="cn" style="color:${d.color}">${d.full}</div>
+        <div class="cs">${d.sub}</div>
+        <div class="cs" style="color:${d.color};margin-top:7px">${d.grade}</div>
+      </div>
+      <div class="cbd">
+        <div class="cd">${d.desc}</div>
+        ${bar("防火墙层数", (d.layers-3)/3, d.color)}
+        ${bar("追踪速度", d.traceMul/1.6, d.color)}
+        ${bar("病毒密度", d.virusMul/1.8, d.color)}
+        ${bar("完整度", 1-(d.hp-3)/2.2, d.color)}
+        <div class="cl" style="margin-top:12px">
+          · 防火墙层数 <b style="color:${d.color}">${d.layers}</b> 层 ｜ 初始完整度 <b style="color:${d.color}">${d.hp}</b><br>
+          · 起始信用点 <b style="color:${d.color}">◈ ${d.credits}</b> ｜ 得分倍率 <b style="color:${d.color}">×${d.scoreMul.toFixed(2)}</b>
+        </div>
+        <div class="best">${b.score?`历史最佳 ${b.score.toLocaleString()} 分${b.win?" · 已攻破":" · 最深 L"+b.layer}`:"尚无记录"}</div>
+        <div class="go"><span style="color:${d.color}">▶ 接入该公司</span><span style="color:#4d5c78">${d.layerNames.length} LAYERS</span></div>
+      </div>`;
+    el.onclick = ()=>{ newRun(i); renderMap(); show("map"); };
+    g.appendChild(el);
+    // 进度条动画
+    requestAnimationFrame(()=>{
+      el.querySelectorAll(".tr i").forEach(t=>{ t.style.width = t.dataset.w + "%"; });
+    });
+  });
+}
+
+/* =========================================================
+   地图页
+   ========================================================= */
+function renderMap(){
+  $("map-hp").innerHTML = pips(S.hp, S.maxHp);
+  $("map-cr").textContent = S.credits;
+  $("map-score").textContent = S.score.toLocaleString();
+  const curL = S.map[Math.min(S.layer, S.map.length-1)];
+  const dn = curL.nodes.filter(x=>x.done).length;
+  $("map-layer").textContent = "L"+Math.min(S.layer+1, DIFF.layers)+"/"+DIFF.layers+" · 本层 "+dn+"/"+curL.nodes.length;
+  $("map-code").textContent = S.code;
+  $("map-corp").innerHTML = `<span style="display:inline-flex;vertical-align:-6px">${CORP_ICON[DIFF.id].replace('width="38" height="38"','width="20" height="20"')}</span> <span style="color:${DIFF.color}">${DIFF.full}</span> · ${DIFF.grade}`;
+  $("map-chips").innerHTML = S.chips.length
+    ? S.chips.map(id=>{ const c=CHIPS.find(x=>x.id===id); return `<span class="chip" title="${c.desc}"><i>◈</i>${c.name}</span>`; }).join("")
+    : `<span style="color:#4d5c78;font-size:11px">（无）</span>`;
+  $("map-chips").innerHTML += `<span class="slot">芯片槽 ${S.chips.length}/${S.chipSlots}</span>`;
+
+  const box = $("layers");
+  box.innerHTML = "";
+  S.map.forEach((L, li)=>{
+    const d = document.createElement("div");
+    d.className = "layer";
+    const names = DIFF.layerNames;
+    const active = li === S.layer;
+    const dn2 = L.nodes.filter(x=>x.done).length;
+    const badge = li < S.layer ? `<div style="color:#4d5c78;margin-top:3px">✓ 已通过</div>`
+      : active ? `<div style="color:var(--lime);margin-top:3px">▸ 攻破 ${dn2}/${L.nodes.length}</div>` + (S.deepMode?`<div style="color:#b026ff;margin-top:3px">◈ 深层扫描</div>`:"") 
+      : `<div style="color:#3d4a63;margin-top:3px">🔒 未解锁</div>`;
+    d.innerHTML = `<div class="layer-hd"><div class="ln">L${li+1}</div><div>${names[li]}</div>${badge}</div>`;
+    const wrap = document.createElement("div");
+    wrap.className = "layer-nodes";
+    if(active && L.nodes.some(x=>!x.done)){
+      const mb = document.createElement("div");
+      mb.className = "modebar";
+      const locked = S.deepLocked;
+      mb.innerHTML = `<span class="tag">本层模式</span>`+
+        `<button class="mbtn ${!S.deepMode?"on":""} ${locked?"lock":""}" data-m="std">标准推进</button>`+
+        `<button class="mbtn ${S.deepMode?"on":""} ${locked?"lock":""}" data-m="deep">◈ 深层扫描</button>`+
+        `<span class="mtip">${locked?"（本层已进入节点，模式已锁定）":(S.deepMode
+          ? "追踪度 ×1.35 · 涌入 ×0.75 · 宽限期 −40%<br>信用点 ×1.5 · 通关本层 +1 芯片槽"
+          : "攻破本层全部节点即可深入下一层")}</span>`;
+      if(!locked) mb.querySelectorAll(".mbtn").forEach(b=>{
+        b.onclick = ()=> setDeepMode(b.dataset.m==="deep");
+      });
+      wrap.appendChild(mb);
+    }
+    L.nodes.forEach((n, ni)=>{
+      const t = NODE_TYPES[n.type];
+      const el = document.createElement("div");
+      el.className = "node " + t.cls + (n.done?" done":"") + (active?" sel":" locked");
+      let ds = "", rw = "";
+      if(n.type==="battle"||n.type==="elite"||n.type==="boss"){
+        ds = `需编译 ${n.target} 个数据包<br>涌入间隔 ${n.gen.toFixed(1)}s`;
+        rw = `奖励 ◈ ${n.rew}`;
+      }else if(n.type==="shop"){
+        ds = `装配芯片 / 修复系统`; rw = `消耗信用点`;
+      }else{
+        ds = `直接提取信用点`; rw = `奖励 ◈ ${n.rew}`;
+      }
+      el.innerHTML = `<div class="ico">${t.ico}</div><div class="nm">${t.nm}</div><div class="ds">${ds}</div><div class="rw">${n.done?"✓ 已完成":rw}</div>`;
+      if(active && !n.done){
+        el.onclick = ()=> enterNode(li, ni);
+      }
+      wrap.appendChild(el);
+    });
+    d.appendChild(wrap);
+    box.appendChild(d);
+  });
+}
+function pips(hp, max){
+  let s = "";
+  for(let i=0;i<max;i++) s += `<span class="pip ${i<hp?"on":""}"></span>`;
+  return s;
+}
+
+function setDeepMode(on){
+  if(S.deepLocked) return;
+  S.deepMode = !!on;
+  if(S.deepMode) logm("◇ 深层扫描已激活 —— 本层追踪度与涌入大幅提升", "y");
+  renderMap();
+}
+
+function enterNode(li, ni){
+  const n = S.map[li].nodes[ni];
+  S.deepLocked = true;
+  if(n.type==="shop"){
+    n.shop = genShop(n);
+    show("shop"); renderShop(n);
+  }else if(n.type==="cache"){
+    const gain = n.rew + (S.mods.leech||0);
+    S.credits += gain;
+    addScore(120);
+    logm(`· 缓存仓库：提取 ◈ ${gain} 信用点`, "y");
+    finishNode(li, ni, {silent:true});
+  }else{
+    startBattle(li, ni);
+  }
+}
+
+function finishNode(li, ni, opt){
+  const L = S.map[li];
+  const n = L.nodes[ni];
+  n.done = true;
+  L.chosen = ni;
+  S.nodesDone++;
+  const left = L.nodes.filter(x=>!x.done).length;
+  if(left === 0){
+    S.layer = li + 1;
+    // 层奖励：深入下一层前重启系统，回复 1 点完整度 + 信用点
+    let healed = false;
+    if(S.hp < S.maxHp){ S.hp++; healed = true; }
+    const bonus = Math.round((16 + li*6) * DIFF.rewMul);
+    S.credits += bonus;
+    addScore(200 + li*80);
+    logm("▲ L"+(li+1)+" "+DIFF.layerNames[li]+" 全部节点已攻破 —— 下一层解锁", "g");
+    logm("  层奖励：◈ "+bonus+(healed?" · 系统重启 +1 完整度":" · 完整度已满"), "y");
+    if(S.deepMode){
+      S.deepCleared++;
+      S.chipSlots += 1;
+      addScore(400 + li*150);
+      logm("★ 深层扫描达成：芯片槽 +1（当前 "+S.chipSlots+" 槽）", "g");
+      toast("深层扫描达成 · 芯片槽 +1", "#b026ff");
+    }
+    S.deepMode = false; S.deepLocked = false;
+    if(S.layer < S.map.length){
+      toast("L"+(li+1)+" 完全攻破 → L"+(S.layer+1)+" 解锁"+(healed?" · +1 完整度":"")+" · ◈"+bonus);
+    }
+  }else{
+    logm("· L"+(li+1)+" 还剩 "+left+" 个节点未攻破", "y");
+    if(!(opt && opt.silent)) toast("该层还剩 "+left+" 个节点 —— 全部攻破才能深入", "#ffb800");
+  }
+  renderMap(); show("map");
+}
+
+/* ---------- 顶部提示条 ---------- */
+let toastT = null;
+function toast(msg, color){
+  let el = $("toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1200;"+
+      "padding:12px 24px;background:rgba(8,12,24,.96);border:1px solid #39ff14;color:#39ff14;"+
+      "font-size:14px;letter-spacing:2px;pointer-events:none;opacity:0;transition:opacity .25s;"+
+      "clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)";
+    document.body.appendChild(el);
+  }
+  const c = color || "#39ff14";
+  el.textContent = msg;
+  el.style.borderColor = c; el.style.color = c;
+  el.style.boxShadow = "0 0 26px " + c + "44";
+  el.style.opacity = "1";
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ el.style.opacity = "0"; }, 2400);
+}
+
+/* =========================================================
+   商店
+   ========================================================= */
+function genShop(node){
+  const items = [];
+  const owned = new Set(S.chips);
+  const avail = CHIPS.filter(c=>!owned.has(c.id));
+  const chipCount = Math.min(3, avail.length);
+  const pool = avail.slice().sort(()=>Math.random()-0.5).slice(0, chipCount);
+  pool.forEach(c=>{
+    items.push({ kind:"chip", chip:c, price: Math.round((40 + c.rare*30 + S.layer*6) * DIFF.priceMul), sold:false });
+  });
+  items.push({ kind:"repair", name:"系统修复", desc:"恢复 1 点完整度", price:Math.round(38*DIFF.priceMul), sold:false });
+  items.push({ kind:"ramup", name:"内存扩容", desc:"RAM 上限 +25 并充满", price:Math.round(44*DIFF.priceMul), sold:false });
+  items.push({ kind:"skillup", name:"技能重写", desc:"随机一个技能消耗 -7", price:Math.round(46*DIFF.priceMul), sold:false });
+  return items;
+}
+function renderShop(node){
+  $("shop-cr").textContent = S.credits;
+  $("shop-hp").textContent = S.hp + " / " + S.maxHp;
+  const slotTip = $("shop-slot");
+  if(slotTip) slotTip.textContent = "芯片槽 " + S.chips.length + " / " + S.chipSlots;
+  const box = $("shop-items");
+  box.innerHTML = "";
+  node.shop.forEach((it, i)=>{
+    const el = document.createElement("div");
+    const rare = it.kind==="chip" && it.chip.rare>0;
+    const full = it.kind==="chip" && S.chips.length >= S.chipSlots;
+    const cant = S.credits < it.price || full;
+    el.className = "item" + (it.sold?" sold":"") + (rare?" rare":"") + (!it.sold && cant?" cant":"");
+    const nm = it.kind==="chip" ? it.chip.name : it.name;
+    const ds = it.kind==="chip" ? it.chip.desc : it.desc;
+    el.innerHTML = `<div class="in">${it.kind==="chip"?"◈ ":"⌁ "}${nm}</div><div class="id">${ds}</div>
+      <div class="ip">${it.sold?"已装配 / 已使用":(full?"芯片槽已满":"◈ "+it.price)}</div>`;
+    if(!it.sold) el.onclick = ()=> buy(node, it, i);
+    box.appendChild(el);
+  });
+}
+function buy(node, it, i){
+  if(S.credits < it.price || it.sold) return;
+  S.credits -= it.price;
+  it.sold = true;
+  if(it.kind==="chip"){
+    if(S.chips.length >= S.chipSlots){ S.credits += it.price; it.sold=false; toast("芯片槽已满（"+S.chipSlots+"）","#ff3b3b"); renderShop(node); return; }
+    S.chips.push(it.chip.id);
+    recalcMods();
+    logm(`· 装配芯片【${it.chip.name}】`, "g");
+  }else if(it.kind==="repair"){
+    S.hp = Math.min(S.maxHp, S.hp+1);
+    logm(`· 系统修复 +1`, "g");
+  }else if(it.kind==="ramup"){
+    S.maxRam += 25; S.ram = S.maxRam;
+    logm(`· 内存扩容 +25`, "g");
+  }else if(it.kind==="skillup"){
+    const s = pick(S.skills.filter(x=>x.cur>10)) || pick(S.skills);
+    s.cur = Math.max(10, s.cur - 7);
+    logm(`· 技能重写：${s.name} 消耗降至 ${s.cur}`, "g");
+  }
+  renderShop(node);
+}
+
+/* =========================================================
+   战斗初始化
+   ========================================================= */
+function startBattle(li, ni){
+  const n = S.map[li].nodes[ni];
+  B = {
+    node:n, li, ni,
+    grid: Array.from({length:ROWS}, ()=>Array(COLS).fill(null)),
+    progress:0, target:n.target,
+    score:0, chain:0,
+    trace:0, grace: S.deepMode ? Math.round(DIFF.grace*0.7) : DIFF.grace,
+    deep: !!S.deepMode,
+    traceSpeed: (n.type==="boss" ? 1.9 : (1.5 + li*0.22 + (n.type==="elite"?0.6:0))) * DIFF.traceMul * (S.deepMode?1.35:1),
+    ram:S.ram, genTimer:0, virusTimer:0,
+    oc:0, cleared:0, clearedForCompress:0,
+    over:false, won:false, shake:0,
+    particles:[], hint:null, bossStage:0, encTimer:0, traceFreeze:0,
+    time:0, maxChainSeen:0, clicks:0
+  };
+  // 初始填充 5 行
+  for(let r=ROWS-5;r<ROWS;r++) for(let c=0;c<COLS;c++) B.grid[r][c] = newCell(r,c,n);
+  S.shieldLeft = S.mods.shield;
+  renderBattleStatic();
+  show("battle");
+  $("b-obj").innerHTML = n.type==="boss"
+    ? `目标：攻破 <b>核心防火墙</b> — 编译 ${n.target} 个数据包`
+    : `目标：编译 <b>${n.target}</b> 个数据包`;
+  logm(`· 进入 L${li+1} ${NODE_TYPES[n.type].nm}`, "c");
+  updateBattleUI();
+}
+
+function newCell(r,c,n){
+  const roll = Math.random();
+  if(roll < n.virus){ return mk("virus", -1, r, c); }
+  if(roll < n.virus + (n.core * (S.mods.coreRate||1))){ return mk("core", ri(0,5), r, c); }
+  if(roll < n.virus + 0.20){ return mk("enc", ri(0,5), r, c); }
+  return mk("normal", ri(0,5), r, c);
+}
+let UID = 1;
+function mk(kind, colorIdx, r, c){
+  return {
+    uid: UID++, kind, color: colorIdx,
+    hp: kind==="virus" ? 2 : (kind==="enc" ? 2 : 1),
+    r, c, py: r, born: performance.now(), pop:0
+  };
+}
+
+/* =========================================================
+   战斗：网格操作
+   ========================================================= */
+function at(r,c){ return (r>=0&&r<ROWS&&c>=0&&c<COLS) ? B.grid[r][c] : null; }
+
+/* 可参与连通匹配的块：normal / core / enc（按颜色），virus 不算 */
+function matchable(cell){
+  return cell && (cell.kind==="normal" || cell.kind==="core" || cell.kind==="enc");
+}
+function findGroup(r,c){
+  const start = at(r,c);
+  if(!matchable(start)) return [];
+  const col = start.color, seen = new Set(), stack = [[r,c]], out = [];
+  seen.add(r*100+c);
+  while(stack.length){
+    const [y,x] = stack.pop();
+    out.push({r:y,c:x});
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dy,dx])=>{
+      const ny=y+dy, nx=x+dx, k=ny*100+nx;
+      if(seen.has(k)) return;
+      const cc = at(ny,nx);
+      if(matchable(cc) && cc.color===col && cc.kind!=="coreBroken"){
+        seen.add(k); stack.push([ny,nx]);
+      }
+    });
+  }
+  return out;
+}
+
+/* 找出所有连通组（用于自动连锁与提示） */
+function allGroups(minSize){
+  const seen = new Set(), groups = [];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const k = r*100+c;
+    if(seen.has(k)) continue;
+    const cell = at(r,c);
+    if(!matchable(cell)) continue;
+    const g = findGroup(r,c);
+    g.forEach(p=>seen.add(p.r*100+p.c));
+    if(g.length >= minSize) groups.push(g);
+  }
+  return groups;
+}
+
+/* 重力：每列压实到底部 */
+function compact(){
+  for(let c=0;c<COLS;c++){
+    let write = ROWS-1;
+    for(let r=ROWS-1;r>=0;r--){
+      const cell = B.grid[r][c];
+      if(cell){
+        if(write !== r){
+          B.grid[write][c] = cell;
+          B.grid[r][c] = null;
+          cell.r = write;
+        }
+        write--;
+      }
+    }
+  }
+}
+
+/* 消除一组，返回消除数量与得分 */
+function clearGroup(group, chain){
+  const mult = 1 + (chain-1) * (0.5 + S.mods.chainGrow - 0.5);
+  const ocMul = B.oc>0 ? (2 * (1 + S.mods.ocBoost*0.5)) : 1;
+  let gained = 0, progAdd = 0;
+  const removed = [];
+
+  group.forEach(({r,c})=>{
+    const cell = at(r,c);
+    if(!cell) return;
+    removed.push(cell);
+    B.grid[r][c] = null;
+    gained += S.mods.scorePer;
+    progAdd += 1;
+    if(cell.kind==="core"){
+      progAdd += 8 + S.mods.coreBonus;
+      gained += 40;
+      spawnBurst(c, r, "#ffd34d", 22);
+    }else{
+      spawnBurst(c, r, COLORS[cell.color].hex, 12);
+    }
+  });
+  // 加密块：hp-1 时放回（不消失）
+  removed.forEach(cell=>{
+    if(cell.kind==="enc" && cell.hp>1){
+      cell.hp = 1;
+      if(B.grid[cell.r][cell.c]===null){ B.grid[cell.r][cell.c]=cell; }
+      else{
+        for(let rr=ROWS-1;rr>=0;rr--){ if(!B.grid[rr][cell.c]){ B.grid[rr][cell.c]=cell; cell.r=rr; break; } }
+      }
+      progAdd -= 1; gained -= S.mods.scorePer;
+    }
+  });
+
+  // 相邻病毒受伤
+  const vset = new Set();
+  group.forEach(({r,c})=>{
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dy,dx])=>{
+      const cc = at(r+dy, c+dx);
+      if(cc && cc.kind==="virus") vset.add(cc.uid);
+    });
+  });
+  vset.forEach(uid=>{
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const cc = B.grid[r][c];
+      if(cc && cc.uid===uid){
+        cc.hp--;
+        cc.pop = performance.now();
+        if(cc.hp<=0){
+          B.grid[r][c] = null;
+          spawnBurst(c, r, "#ff3b3b", 14);
+          progAdd += 2; gained += 15;
+        }
+      }
+    }
+  });
+
+  const real = removed.filter(x=>!(x.kind==="enc" && x.hp===1)).length;
+  let pts = Math.round(gained * mult * ocMul);
+  if(group.length>=5) pts += S.mods.bigBonus;
+  B.score += pts;
+  B.progress += progAdd;
+  B.cleared += progAdd;
+  B.clearedForCompress += real;
+  B.trace = clamp(B.trace - group.length*1.6, 0, 100);
+  B.maxChainSeen = Math.max(B.maxChainSeen, chain);
+
+  if(chain>=2){
+    floatText(`CHAIN ×${chain}  +${pts}`, CW/2, 90, "#ffb800", 20);
+  }else if(pts>0){
+    floatText(`+${pts}`, CW/2, 120, "#00f0ff", 15);
+  }
+  return { pts, progAdd };
+}
+
+/* ---------- 点击处理 ---------- */
+function onClickCell(r,c){
+  if(!B || B.over) return;
+  const g = findGroup(r,c);
+  if(g.length < 3){
+    const cell = at(r,c);
+    if(cell && cell.kind==="virus") tip("病毒无法直接编译 —— 消除它相邻的数据包");
+    else if(cell && cell.kind==="enc") tip("加密块需要与其同色的其他数据包一起编译");
+    else tip("至少需要 3 个相邻同色数据包");
+    return;
+  }
+  B.clicks++;
+  B.chain = 1;
+  clearGroup(g, 1);
+  compact();
+  resolveChains();
+  afterAction();
+}
+
+/* 自动连锁：塌落后自动形成 >=4 的组 */
+function resolveChains(){
+  let guard = 0;
+  while(guard++ < 12){
+    const groups = allGroups(4);
+    if(!groups.length) break;
+    // 依次消除（全部同轮，chain 递增）
+    groups.forEach((g, i)=>{
+      B.chain = B.chain + 1;
+      clearGroup(g, B.chain);
+    });
+    compact();
+  }
+  if(B.chain>1) setTimeout(()=>{ B.chain = 0; }, 700);
+}
+
+/* ---------- 数据涌入 ---------- */
+function generateWave(count){
+  // 选非满的列
+  let overflowed = false;
+  for(let i=0;i<count;i++){
+    const heights = [];
+    for(let c=0;c<COLS;c++){
+      let h=0; for(let r=0;r<ROWS;r++) if(B.grid[r][c]) h++;
+      heights.push(h);
+    }
+    const free = heights.map((h,c)=>({h,c})).filter(x=>x.h < ROWS);
+    if(!free.length){
+      overflow(); overflowed = true; continue;
+    }
+    free.sort((a,b)=>a.h-b.h);
+    const target = free[Math.min(free.length-1, ri(0, Math.min(2, free.length-1)))];
+    const c = target.c;
+    // 找该列最上方的空格
+    let r = 0; while(r<ROWS && B.grid[r][c]) r++;
+    if(r>=ROWS){ overflow(); continue; }
+    const cell = newCell(r, c, B.node);
+    cell.py = -1.2;
+    B.grid[r][c] = cell;
+  }
+  if(!overflowed) return;
+}
+
+function overflow(){
+  if(S.shieldLeft > 0){
+    S.shieldLeft--;
+    floatText("溢出护盾抵消！", CW/2, 160, "#00f0ff", 17);
+    logm("· 溢出护盾抵消一次溢出", "g");
+    // 强制清理顶部
+    for(let c=0;c<COLS;c++) for(let r=0;r<3;r++) if(B.grid[r][c]){ B.grid[r][c]=null; }
+    compact();
+    return;
+  }
+  S.hp--;
+  B.shake = 1;
+  flashRed();
+  floatText("数据溢出  −1 完整度", CW/2, 160, "#ff3b3b", 18);
+  logm("· 数据溢出，完整度 -1", "r");
+  // 清理顶部 2 行缓解
+  for(let c=0;c<COLS;c++) for(let r=0;r<2;r++) if(B.grid[r][c]) spawnBurst(c, r, "#ff3b3b", 6), B.grid[r][c]=null;
+  compact();
+  updateBattleUI();
+  if(S.hp<=0) endBattle(false);
+}
+
+/* ---------- 病毒扩散 ---------- */
+function spreadVirus(){
+  const cands = [];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const cell = B.grid[r][c];
+    if(!cell) continue;
+    if(cell.kind==="virus"){
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dy,dx])=>{
+        const t = at(r+dy,c+dx);
+        if(t && t.kind==="normal") cands.push({r:r+dy,c:c+dx});
+      });
+    }
+  }
+  if(!cands.length) return;
+  const p = pick(cands);
+  const cell = B.grid[p.r][p.c];
+  if(cell){ B.grid[p.r][p.c] = mk("virus", -1, p.r, p.c); B.grid[p.r][p.c].py = p.r; }
+}
+
+/* ---------- 行动后检查 ---------- */
+function afterAction(){
+  // 压缩芯片
+  if(S.mods.compress>0 && B.clearedForCompress >= S.mods.compress){
+    B.clearedForCompress -= S.mods.compress;
+    purgeRows(1, false);
+    floatText("数据压缩：清理底部一行", CW/2, 200, "#b026ff", 15);
+  }
+  updateBattleUI();
+  if(B.progress >= B.target && !B.over){
+    if(B.node.type==="boss" && B.bossStage < DIFF.bossStages-1){
+      B.bossStage++;
+      floatText(`防火墙第 ${B.bossStage} 层崩解！`, CW/2, 130, "#ff3b3b", 22);
+      logm(`· 核心防火墙第 ${B.bossStage} 层崩解`, "y");
+      B.trace = 0;
+      // 病毒浪潮
+      for(let i=0;i<5;i++) spreadVirus();
+      B.target = Math.round(B.target * 1.25);
+      B.traceSpeed *= 1.2;
+    }else{
+      endBattle(true);
+    }
+  }
+}
+
+/* =========================================================
+   技能
+   ========================================================= */
+function useSkill(i){
+  if(!B || B.over) return;
+  const s = S.skills[i];
+  if(!s || B.ram < s.cur) return;
+  B.ram -= s.cur;
+  const lv = s.lv || 0;
+  const extra = S.mods.purgeBoost + (s.id==="purge" ? lv : 0);
+
+  if(s.id==="ping"){
+    let n = 0;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const cell = B.grid[r][c];
+      if(cell && cell.kind==="virus"){
+        B.grid[r][c] = mk("normal", ri(0,5), r, c);
+        B.grid[r][c].py = r;
+        spawnBurst(c, r, "#00f0ff", 10);
+        n++;
+      }
+    }
+    if(lv) B.ram = clamp(B.ram + lv*5, 0, S.maxRam);
+    floatText(`PING：净化 ${n} 个病毒`, CW/2, 150, "#00f0ff", 17);
+    logm(`· PING 净化 ${n} 个病毒`, "g");
+  }
+  else if(s.id==="oc"){
+    B.oc = 8 + lv*2 + S.mods.ocBoost*4;
+    floatText("OVERCLOCK 启动！", CW/2, 150, "#ff2e97", 19);
+    logm("· OVERCLOCK 启动", "g");
+  }
+  else if(s.id==="purge"){
+    purgeRows(2 + extra, true);
+    if(extra) B.ram = clamp(B.ram + 15, 0, S.maxRam);
+    floatText("PURGE：清理底层", CW/2, 150, "#39ff14", 17);
+    logm("· PURGE 清理底层", "g");
+  }
+  else if(s.id==="rollb"){
+    let n = 0;
+    for(let c=0;c<COLS;c++) for(let r=0;r<2+lv+extra;r++){
+      if(B.grid[r][c]){ spawnBurst(c, r, "#ffb800", 8); B.grid[r][c]=null; n++; }
+    }
+    compact();
+    B.progress += Math.round(n*0.4);
+    floatText(`ROLLBACK：清除 ${n} 个`, CW/2, 150, "#ffb800", 17);
+    logm(`· ROLLBACK 清除 ${n} 个数据包`, "g");
+  }
+  else if(s.id==="ghost"){
+    B.traceFreeze = 6 + lv*2;
+    floatText("GHOST：追踪冻结 "+(6+lv*2)+"s", CW/2, 150, "#b026ff", 18);
+    logm("· GHOST 追踪冻结", "g");
+  }
+  else if(s.id==="cascade"){
+    // 统计底部各行颜色，选出现最多的颜色，把底部 N 行同化
+    const rows = 1 + lv;
+    const cnt = [0,0,0,0,0,0];
+    for(let c=0;c<COLS;c++) for(let k=0;k<rows;k++){
+      const cell = B.grid[ROWS-1-k][c];
+      if(cell && cell.kind!=="virus" && cell.color>=0) cnt[cell.color]++;
+    }
+    let best = 0;
+    for(let i=1;i<cnt.length;i++) if(cnt[i]>cnt[best]) best = i;
+    for(let c=0;c<COLS;c++) for(let k=0;k<rows;k++){
+      const r = ROWS-1-k, cell = B.grid[r][c];
+      if(cell && cell.kind!=="virus"){
+        cell.color = best;
+        cell.kind = "normal";
+        cell.hp = 1;
+        spawnBurst(c, r, COLORS[best].hex, 8);
+      }
+    }
+    floatText("CASCADE：底部 "+rows+" 行同化", CW/2, 150, "#39ff14", 18);
+    logm("· CASCADE 同化底部 "+rows+" 行", "g");
+  }
+  updateBattleUI();
+  afterAction();
+}
+
+function purgeRows(n, countProgress){
+  let cnt = 0;
+  for(let c=0;c<COLS;c++){
+    for(let k=0;k<n;k++){
+      const r = ROWS-1-k;
+      const cell = B.grid[r][c];
+      if(cell){
+        if(cell.kind==="virus"){ B.grid[r][c]=null; cnt++; continue; }
+        if(cell.kind==="enc" && cell.hp>1){ cell.hp=1; continue; }
+        B.grid[r][c] = null; cnt++;
+      }
+    }
+  }
+  compact();
+  if(countProgress){ B.progress += cnt; B.cleared += cnt; B.score += cnt*S.mods.scorePer; }
+}
+
+/* =========================================================
+   战斗 UI
+   ========================================================= */
+function renderBattleStatic(){
+  $("b-node").textContent = `L${B.li+1} · ${NODE_TYPES[B.node.type].nm}`;
+  const sk = $("skills");
+  sk.innerHTML = "";
+  S.skills.forEach((s,i)=>{
+    const el = document.createElement("div");
+    el.className = "skill";
+    el.innerHTML = `<div class="sn"><span>${i+1}. ${s.name}</span><span class="sc">${s.cur} RAM</span></div>
+      <div class="sd">${s.desc}</div><div class="cd"></div>`;
+    el.onclick = ()=> useSkill(i);
+    sk.appendChild(el);
+  });
+  $("b-chips").innerHTML = S.chips.length
+    ? S.chips.map(id=>{ const c=CHIPS.find(x=>x.id===id); return `<span class="chip" title="${c.desc}">${c.name}</span>`; }).join("")
+    : `<span style="color:#4d5c78">（无）</span>`;
+}
+
+function updateBattleUI(){
+  if(!B) return;
+  $("b-hp").textContent = `${Math.max(0,S.hp)}/${S.maxHp}`;
+  $("b-pips").innerHTML = pips(S.hp, S.maxHp);
+  const pct = clamp(B.progress / B.target * 100, 0, 100);
+  $("b-dlbar").style.width = pct + "%";
+  $("b-dl").textContent = Math.round(pct) + "%  (" + Math.floor(B.progress) + "/" + B.target + ")";
+  $("b-trbar").style.width = clamp(B.trace,0,100) + "%";
+  $("b-tr").textContent = B.traceFreeze>0 ? ("冻结 "+B.traceFreeze.toFixed(1)+"s") : (Math.round(B.trace) + "%");
+  $("b-score").textContent = B.score.toLocaleString();
+  $("b-chain").textContent = B.chain>1 ? `编译链 ×${B.chain}  +${Math.round((B.chain-1)*(0.5+S.mods.chainGrow-0.5)*100)}%` : "";
+  $("b-rambar").style.width = clamp(B.ram / S.maxRam * 100, 0, 100) + "%";
+  $("b-ramtxt").textContent = `${Math.floor(B.ram)} / ${S.maxRam}` + (B.oc>0 ? "  ⚡超频中" : "");
+  const sk = $("skills").children;
+  S.skills.forEach((s,i)=>{
+    if(sk[i]){
+      const ok = B.ram >= s.cur;
+      sk[i].disabled = !ok || B.over;
+      sk[i].querySelector(".sc").style.color = ok ? "#00f0ff" : "#5a6a85";
+      sk[i].classList.toggle("active", s.id==="oc" && B.oc>0);
+      sk[i].querySelector(".cd").style.width = clamp(B.ram/s.cur*100,0,100) + "%";
+    }
+  });
+}
+
+let tipTimer = null;
+function tip(t){
+  $("b-tip").textContent = t;
+  clearTimeout(tipTimer);
+  tipTimer = setTimeout(()=>{ $("b-tip").textContent=""; }, 2200);
+}
+
+/* ---------- 浮动文字 / 粒子 ---------- */
+function floatText(txt, x, y, color, size){
+  const box = $("floaters");
+  const el = document.createElement("div");
+  el.className = "floater";
+  el.textContent = txt;
+  el.style.left = "50%";
+  el.style.top = y + "px";
+  el.style.transform = "translateX(-50%)";
+  el.style.color = color;
+  el.style.fontSize = (size||16) + "px";
+  el.style.whiteSpace = "nowrap";
+  box.appendChild(el);
+  setTimeout(()=> el.remove(), 1000);
+}
+function flashRed(){
+  const f = $("flashred");
+  f.classList.remove("on"); void f.offsetWidth; f.classList.add("on");
+  const w = $("gridwrap");
+  w.classList.remove("shake"); void w.offsetWidth; w.classList.add("shake");
+}
+function spawnBurst(c, r, color, n){
+  if(!B) return;
+  for(let i=0;i<n;i++){
+    B.particles.push({
+      x: c*CELL + CELL/2, y: r*CELL + CELL/2,
+      vx: rnd(-3.2,3.2), vy: rnd(-4.2,1.2),
+      life:1, color, size: rnd(2,5)
+    });
+  }
+}
+
+/* =========================================================
+   渲染
+   ========================================================= */
+const cv = $("grid"), ctx = cv.getContext("2d");
+let dpr = 1;
+function sizeCanvas(){
+  dpr = Math.min(2, window.devicePixelRatio||1);
+  cv.width = CW*dpr; cv.height = CH*dpr;
+  cv.style.width = CW+"px"; cv.style.height = CH+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+sizeCanvas();
+window.addEventListener("resize", sizeCanvas);
+
+let hover = null;
+
+function drawShape(g, shape, cx, cy, s, hex, glow, alpha){
+  g.save();
+  g.translate(cx, cy);
+  g.globalAlpha = alpha===undefined?1:alpha;
+  g.shadowColor = hex; g.shadowBlur = glow;
+  g.strokeStyle = hex; g.lineWidth = 2.4;
+  const grd = g.createLinearGradient(-s,-s,s,s);
+  grd.addColorStop(0, hex+"55"); grd.addColorStop(1, hex+"11");
+  g.fillStyle = grd;
+  g.beginPath();
+  const h = s*0.78;
+  if(shape==="square"){
+    const q = h*0.22;
+    g.moveTo(-h+q,-h); g.lineTo(h-q,-h); g.quadraticCurveTo(h,-h,h,-h+q);
+    g.lineTo(h,h-q); g.quadraticCurveTo(h,h,h-q,h);
+    g.lineTo(-h+q,h); g.quadraticCurveTo(-h,h,-h,h-q);
+    g.lineTo(-h,-h+q); g.quadraticCurveTo(-h,-h,-h+q,-h);
+  }else if(shape==="circle"){
+    g.arc(0,0,h,0,Math.PI*2);
+  }else if(shape==="triangle"){
+    g.moveTo(0,-h); g.lineTo(h*0.92,h*0.7); g.lineTo(-h*0.92,h*0.7); g.closePath();
+  }else if(shape==="diamond"){
+    g.moveTo(0,-h); g.lineTo(h,0); g.lineTo(0,h); g.lineTo(-h,0); g.closePath();
+  }else if(shape==="hexagon"){
+    for(let i=0;i<6;i++){ const a=Math.PI/6 + i*Math.PI/3;
+      const x=Math.cos(a)*h, y=Math.sin(a)*h; i?g.lineTo(x,y):g.moveTo(x,y); }
+    g.closePath();
+  }else{ // star
+    for(let i=0;i<10;i++){
+      const a = -Math.PI/2 + i*Math.PI/5, rr = i%2? h*0.44 : h;
+      const x=Math.cos(a)*rr, y=Math.sin(a)*rr; i?g.lineTo(x,y):g.moveTo(x,y);
+    }
+    g.closePath();
+  }
+  g.fill(); g.stroke();
+  g.restore();
+}
+
+function draw(){
+  requestAnimationFrame(draw);
+  if(!B) return;
+
+  const now = performance.now();
+  // 背景网格
+  ctx.clearRect(0,0,CW,CH);
+  ctx.save();
+  ctx.strokeStyle = "rgba(0,240,255,.07)"; ctx.lineWidth = 1;
+  for(let c=1;c<COLS;c++){ ctx.beginPath(); ctx.moveTo(c*CELL,0); ctx.lineTo(c*CELL,CH); ctx.stroke(); }
+  for(let r=1;r<ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*CELL); ctx.lineTo(CW,r*CELL); ctx.stroke(); }
+  // 扫描线
+  const sy = (now/14) % CH;
+  const g2 = ctx.createLinearGradient(0, sy-40, 0, sy+40);
+  g2.addColorStop(0,"rgba(0,240,255,0)"); g2.addColorStop(.5,"rgba(0,240,255,.09)"); g2.addColorStop(1,"rgba(0,240,255,0)");
+  ctx.fillStyle = g2; ctx.fillRect(0, sy-40, CW, 80);
+  ctx.restore();
+
+  // hover 组高亮
+  let hoverSet = null;
+  if(hover && !B.over){
+    const g = findGroup(hover.r, hover.c);
+    if(g.length>=3) hoverSet = new Set(g.map(p=>p.r*100+p.c));
+  }
+
+  // 块
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell = B.grid[r][c];
+      if(!cell) continue;
+      // 缓动下落
+      cell.py += (cell.r - cell.py) * 0.22;
+      if(Math.abs(cell.r - cell.py) < 0.002) cell.py = cell.r;
+      const x = c*CELL + CELL/2;
+      const y = cell.py*CELL + CELL/2;
+      const isHover = hoverSet && hoverSet.has(r*100+c);
+      const popT = clamp((now - cell.born)/260, 0, 1);
+      const scale = 0.55 + 0.45*(1-Math.pow(1-popT,3));
+      const pulse = cell.kind==="core" ? 1 + Math.sin(now/220)*0.06 : 1;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale*pulse, scale*pulse);
+
+      if(cell.kind==="virus"){
+        // 病毒：暗色块 + 红 X + 抖动
+        const jx = Math.sin(now/60 + cell.uid)*1.2;
+        ctx.translate(jx, 0);
+        ctx.shadowColor = "#ff3b3b"; ctx.shadowBlur = 16;
+        ctx.fillStyle = "rgba(40,8,16,.92)";
+        ctx.strokeStyle = "#ff3b3b"; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.rect(-CELL*0.34,-CELL*0.34,CELL*0.68,CELL*0.68); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-10,-10); ctx.lineTo(10,10); ctx.moveTo(10,-10); ctx.lineTo(-10,10);
+        ctx.stroke();
+        if(cell.hp===1){
+          ctx.strokeStyle="rgba(255,255,255,.6)"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(-16,-6); ctx.lineTo(0,4); ctx.lineTo(16,-10); ctx.stroke();
+        }
+        ctx.restore();
+        continue;
+      }
+
+      const col = COLORS[cell.color];
+      const glow = isHover ? 26 : 12;
+      drawShape(ctx, col.shape, 0, 0, CELL*0.5, col.hex, glow, 1);
+
+      // 加密块：外层护罩
+      if(cell.kind==="enc"){
+        ctx.shadowBlur = 0;
+        if(cell.hp>1){
+          ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.6;
+          ctx.setLineDash([4,3]);
+          ctx.beginPath(); ctx.arc(0,0,CELL*0.36,0,Math.PI*2); ctx.stroke();
+          ctx.setLineDash([]);
+        }else{
+          ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(-12,-14); ctx.lineTo(2,0); ctx.lineTo(-8,14); ctx.stroke();
+        }
+      }
+      // 核心块：金环
+      if(cell.kind==="core"){
+        ctx.shadowColor="#ffd34d"; ctx.shadowBlur=18;
+        ctx.strokeStyle="#ffd34d"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(0,0,CELL*0.40, now/500, now/500 + Math.PI*1.5); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,0,CELL*0.40, now/500+Math.PI, now/500 + Math.PI*2.2); ctx.stroke();
+      }
+      if(isHover){
+        ctx.shadowBlur=0;
+        ctx.strokeStyle="rgba(255,255,255,.85)"; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.rect(-CELL*0.44,-CELL*0.44,CELL*0.88,CELL*0.88); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // 粒子
+  for(let i=B.particles.length-1;i>=0;i--){
+    const p = B.particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.16; p.life -= 0.026;
+    if(p.life<=0){ B.particles.splice(i,1); continue; }
+    ctx.save();
+    ctx.globalAlpha = clamp(p.life,0,1);
+    ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x-p.size/2, p.y-p.size/2, p.size, p.size);
+    ctx.restore();
+  }
+
+  // 超频覆盖
+  if(B.oc>0){
+    ctx.save();
+    ctx.globalAlpha = 0.10 + Math.sin(now/100)*0.04;
+    ctx.fillStyle = "#ff2e97"; ctx.fillRect(0,0,CW,CH);
+    ctx.restore();
+  }
+  // 危险线（顶部 2 行提示）
+  if(!B.over){
+    let danger = 0;
+    for(let c=0;c<COLS;c++){
+      let h=0; for(let r=0;r<ROWS;r++) if(B.grid[r][c]) h++;
+      if(h >= ROWS-1) danger++;
+    }
+    if(danger>0){
+      ctx.save();
+      ctx.globalAlpha = 0.35 + Math.sin(now/140)*0.2;
+      ctx.strokeStyle="#ff3b3b"; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(0,3); ctx.lineTo(CW,3); ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+requestAnimationFrame(draw);
+
+/* ---------- 鼠标输入 ---------- */
+function cellFromEvent(e){
+  const rect = cv.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const c = Math.floor(x / CELL), r = Math.floor(y / CELL);
+  if(r<0||r>=ROWS||c<0||c>=COLS) return null;
+  return {r,c};
+}
+cv.addEventListener("mousemove", e=>{
+  const p = cellFromEvent(e);
+  hover = p;
+  cv.style.cursor = (p && at(p.r,p.c)) ? "pointer" : "default";
+});
+cv.addEventListener("mouseleave", ()=>{ hover=null; });
+cv.addEventListener("click", e=>{
+  const p = cellFromEvent(e);
+  if(p) onClickCell(p.r, p.c);
+});
+cv.addEventListener("contextmenu", e=>e.preventDefault());
+
+/* =========================================================
+   主循环（时间推进）
+   ========================================================= */
+let lastT = performance.now();
+function loop(){
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  let dt = (now - lastT)/1000; lastT = now;
+  if(dt > 0.25) dt = 0.25;
+  if(!B || B.over) return;
+
+  B.time += dt;
+
+  // RAM 回复
+  const regen = S.mods.ramRegen * (B.oc>0 ? 1.5 : 1);
+  B.ram = clamp(B.ram + regen*dt, 0, S.maxRam);
+
+  // 超频计时
+  if(B.oc>0){ B.oc -= dt; if(B.oc<0) B.oc=0; }
+
+  // 追踪度
+  if(B.grace>0){ B.grace -= dt; }
+  else if(B.traceFreeze>0){ B.traceFreeze -= dt; }
+  else B.trace += B.traceSpeed * dt * (B.oc>0 ? 0.55 : 1);
+  if(B.trace >= 100){
+    B.trace = 0;
+    if(S.shieldLeft>0 && Math.random()<0.5){
+      S.shieldLeft--;
+      floatText("护盾抵御 ICE 反制", CW/2, 150, "#00f0ff", 17);
+    }else{
+      S.hp--;
+      flashRed();
+      floatText("ICE 反制！ −1 完整度", CW/2, 150, "#ff3b3b", 19);
+      logm("· ICE 反制，完整度 -1", "r");
+      for(let i=0;i<2;i++) spreadVirus();
+      if(S.hp<=0){ endBattle(false); return; }
+    }
+  }
+
+  // 数据涌入
+  B.genTimer += dt;
+  const interval = Math.max(0.45, (B.node.gen + S.mods.genBonus) * (B.deep?0.82:1)) * (B.oc>0 ? 1.9 : 1);
+  if(B.genTimer >= interval){
+    B.genTimer = 0;
+    generateWave(B.node.type==="boss" ? DIFF.genCount : (DIFF.genCount + (B.li>=2?1:0)));
+    if(!B.over) updateBattleUI();
+  }
+
+  // 病毒扩散
+  B.virusTimer += dt;
+  const vInt = 7.5 - B.li*0.5;
+  if(B.virusTimer >= Math.max(3, vInt)){
+    B.virusTimer = 0;
+    spreadVirus();
+  }
+
+  // Boss：定期加密底行
+  if(B.node.type==="boss"){
+    B.encTimer += dt;
+    if(B.encTimer > 13){
+      B.encTimer = 0;
+      for(let c=0;c<COLS;c++){
+        const cell = B.grid[ROWS-1][c];
+        if(cell && cell.kind==="normal"){ B.grid[ROWS-1][c] = mk("enc", cell.color, ROWS-1, c); B.grid[ROWS-1][c].py = ROWS-1; }
+      }
+      floatText("防火墙加密了底层数据", CW/2, 190, "#b026ff", 15);
+    }
+  }
+
+  // 定期刷新 UI 数值
+  if(Math.floor(now/200) % 2 === 0) updateBattleUI();
+}
+requestAnimationFrame(loop);
+
+/* =========================================================
+   战斗结束
+   ========================================================= */
+function endBattle(win){
+  if(B.over) return;
+  B.over = true; B.won = win;
+  S.ram = B.ram;
+
+  let credits = 0;
+  if(win){
+    credits = Math.round((B.node.rew + (S.mods.leech||0)) * (B.deep?1.5:1));
+    const timeBonus = Math.max(0, Math.round(400 - B.time*4));
+    const hpBonus = S.hp * 120;
+    const chainBonus = B.maxChainSeen * 60;
+    B.score += timeBonus + hpBonus + chainBonus;
+    S.credits += credits;
+    addScore(B.score);
+    logm(`✓ 攻破节点，获得 ◈ ${credits}`, "g");
+    logm(`  得分 ${B.score}（时间+${timeBonus} 完整度+${hpBonus} 连锁+${chainBonus}）`, "y");
+    if(B.node.type==="boss"){
+      logm("★ 核心数据库已窃取 —— BREACH COMPLETE", "g");
+    }
+  }else{
+    B.score = Math.round(B.score*0.5);
+    addScore(B.score);
+    logm("✗ 连接被强制切断", "r");
+  }
+
+  // 结算面板
+  const bonusWin = B.node.type==="boss";
+  setTimeout(()=>{
+    if(win && !bonusWin){
+      finishNode(B.li, B.ni);
+    }else if(win && bonusWin){
+      endRun(true);
+    }else{
+      endRun(false);
+    }
+  }, 700);
+}
+
+function endRun(win){
+  const m = loadMeta();
+  const gain = shardGain(win);
+  m.shards += gain;
+  m.runs += 1;
+  saveMeta(m);
+  S.shardGain = gain;
+  const D = DIFF, di = D.id, total = D.layers;
+  const best = loadBest(di);
+  const rec = { score: S.score, layer: win?total:Math.min(S.layer+1,total), win: !!win };
+  if(!best.score || S.score > best.score) saveBest(rec, di);
+  else if(win && !best.win) saveBest({ score: Math.max(best.score, S.score), layer:total, win:true }, di);
+
+  $("end-title").textContent = win ? "BREACH COMPLETE" : "CONNECTION LOST";
+  $("end-title").style.color = win ? "var(--lime)" : "var(--red)";
+  $("end-sub").innerHTML = win
+    ? `<span style="color:${D.color}">${D.full}</span> 核心数据库已窃取，你消失在霓虹雨里。`
+    : `你在 <span style="color:${D.color}">${D.full}</span> 第 ${Math.min(S.layer+1,total)} 层被 ICE 反制，痕迹已抹除。`;
+  $("end-stats").innerHTML = `
+    <div class="resultline"><span>目标公司</span><b style="color:${D.color}">${D.full} · ${D.grade}</b></div>
+    <div class="resultline"><span>最终得分</span><b>${S.score.toLocaleString()} <span style="color:#5a6a85;font-size:12px">(原始 ${Math.round(S.rawScore).toLocaleString()} × ${D.scoreMul.toFixed(2)})</span></b></div>
+    <div class="resultline"><span>抵达层数</span><b>L${win?total:Math.min(S.layer+1,total)} / ${total}</b></div>
+    <div class="resultline"><span>攻破节点</span><b>${S.nodesDone}</b></div>
+    <div class="resultline"><span>装配芯片</span><b>${S.chips.length} / ${S.chipSlots} 槽</b></div>
+    <div class="resultline"><span>深层扫描</span><b>${S.deepCleared} 层</b></div>
+    <div class="resultline"><span>◆ 获得数据碎片</span><b style="color:#d9b6ff">+${S.shardGain||0}</b></div>
+    <div class="resultline"><span>剩余完整度</span><b>${Math.max(0,S.hp)} / ${S.maxHp}</b></div>
+    <div class="resultline"><span>该目标历史最佳</span><b style="color:${D.color}">${Math.max(loadBest(di).score||0, S.score).toLocaleString()}</b></div>
+    <div class="logbox">${S.log.map(l=>`<div class="${l.c}">${l.t}</div>`).join("")}</div>`;
+  show("end");
+}
+
+/* =========================================================
+   事件绑定
+   ========================================================= */
+$("btn-start").onclick = ()=>{ renderDiff(); show("diff"); };
+$("btn-help").onclick = ()=>{ prevScreen="title"; show("help"); };
+$("btn-help2").onclick = ()=>{ prevScreen="map"; show("help"); };
+$("btn-help-close").onclick = ()=>{
+  if(prevScreen==="map" && S){ renderMap(); show("map"); }
+  else show("title");
+};
+$("btn-shop-leave").onclick = ()=>{
+  const li = S.layer;
+  let ni = S.map[li].nodes.findIndex(n=>n.type==="shop" && n.shop && !n.done);
+  if(ni < 0) ni = S.map[li].nodes.findIndex(n=>n.type==="shop" && !n.done);
+  if(ni < 0) ni = S.map[li].nodes.findIndex(n=>n.type==="shop");
+  if(ni < 0){ renderMap(); show("map"); return; }
+  finishNode(li, ni);
+};
+$("btn-flee").onclick = ()=>{
+  if(!B || B.over) return;
+  B.over = true;
+  S.ram = B.ram;
+  addScore(Math.round(B.score*0.3));
+  logm("· 主动撤退，保留 30% 得分", "y");
+  S.map[B.li].nodes[B.ni].done = true;
+  S.nodesDone++;
+  S.layer = B.li + 1;
+  renderMap(); show("map");
+};
+$("btn-again").onclick = ()=>{ newRun(DIFF.id); renderMap(); show("map"); };
+$("btn-title").onclick = ()=>{ renderTitle(); show("title"); };
+$("btn-diff-back").onclick = ()=>{ renderTitle(); show("title"); };
+$("btn-market").onclick = ()=>{ renderMarket(); show("market"); };
+(function(){ const e=$("btn-mkt-icon"); if(e) e.innerHTML = SHARD_ICON.replace('width="26" height="26"','width="18" height="18"'); })();
+$("btn-mkt-back").onclick = ()=>{ renderTitle(); show("title"); };
+
+window.addEventListener("keydown", e=>{
+  if(!$("screen-battle").classList.contains("on")) {
+    if(e.key==="Escape" && $("screen-help").classList.contains("on")) $("btn-help-close").click();
+    return;
+  }
+  if(e.key>="1" && e.key<="6"){ useSkill(parseInt(e.key)-1); }
+  else if(e.key==="Escape"){ $("btn-flee").click(); }
+  else if(e.key==="h" || e.key==="H"){
+    const gs = allGroups(3);
+    if(gs.length){
+      gs.sort((a,b)=>b.length-a.length);
+      const p = gs[0][0];
+      hover = {r:p.r, c:p.c};
+      tip(`提示：L${p.r+1} / C${p.c+1} 有 ${gs[0].length} 个可编译`);
+      setTimeout(()=>{ if(hover && hover.r===p.r && hover.c===p.c) hover=null; }, 1600);
+    }else tip("没有可编译的组，等待新数据");
+  }
+});
+
+/* 启动 */
+renderTitle();
+</script>
+</body>
+</html>
